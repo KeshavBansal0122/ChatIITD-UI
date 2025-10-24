@@ -1,33 +1,29 @@
 import { useState } from 'react';
-import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../contexts/AuthContext';
-import { MessageSquare } from 'lucide-react';
+import { LogIn, MessageSquare, Loader2 } from 'lucide-react';
 
 export function Login() {
-  const [error, setError] = useState('');
-  const { loginWithGoogle } = useAuth();
+  const { login, error } = useAuth();
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  // We'll use the Google One Tap / button flow which returns a credential (id_token)
-  const handleSuccess = async (response: { credential?: string }) => {
-    setError('');
+  const handleLogin = () => {
+    setLocalError(null);
+    setIsRedirecting(true);
 
     try {
-      const idToken = response.credential;
-      if (!idToken) {
-        throw new Error('No id_token returned from Google');
+      const started = login();
+      if (!started) {
+        setIsRedirecting(false);
       }
-
-      await loginWithGoogle(idToken);
     } catch (err) {
-      console.error('Google login error:', err);
-      setError('Google sign-in failed. Please try again.');
+      console.error('DevClub login error:', err);
+      setLocalError('DevClub sign-in failed to start. Please try again.');
+      setIsRedirecting(false);
     }
   };
 
-  const handleError = (err?: unknown) => {
-    console.error('Google login error (client):', err);
-    setError('Google sign-in was cancelled or failed.');
-  };
+  const displayError = localError ?? error ?? null;
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
@@ -39,28 +35,40 @@ export function Login() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">ChatIITD</h1>
-          <p className="text-gray-400">Sign in with Google to continue</p>
+          <p className="text-gray-400">Sign in with DevClub to continue</p>
         </div>
 
         <div className="bg-gray-900 rounded-2xl shadow-xl p-8 border border-gray-800">
-          {error && (
+          {displayError && (
             <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-3 rounded-lg text-sm mb-6">
-              {error}
+              {displayError}
             </div>
           )}
 
           <div className="w-full">
-            <GoogleLogin
-              onSuccess={handleSuccess}
-              onError={handleError}
-              useOneTap
-              text="signin_with"
-            />
+            <button
+              type="button"
+              onClick={handleLogin}
+              disabled={isRedirecting}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed text-white rounded-lg transition font-medium"
+            >
+              {isRedirecting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Redirecting...
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-5 h-5" />
+                  Continue with DevClub
+                </>
+              )}
+            </button>
           </div>
 
           <div className="mt-6 pt-6 border-t border-gray-800">
             <p className="text-sm text-gray-500 text-center">
-              Your Google account will be used to authenticate with the backend API
+              You will be redirected to DevClub to use your kerberos for authentication.
             </p>
           </div>
         </div>
