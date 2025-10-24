@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService, Chat } from '../services/api';
 import { Plus, MessageSquare, LogOut, Loader2 } from 'lucide-react';
@@ -12,18 +12,15 @@ interface ChatSidebarProps {
   selectedChatId: string | null;
   onSelectChat: (chatId: string) => void;
   onNewChat: () => void;
+  refreshTrigger?: number;
 }
 
-export function ChatSidebar({ selectedChatId, onSelectChat, onNewChat }: ChatSidebarProps) {
+export function ChatSidebar({ selectedChatId, onSelectChat, onNewChat, refreshTrigger }: ChatSidebarProps) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { accessToken, logout } = useAuth();
 
-  useEffect(() => {
-    loadChats();
-  }, []);
-
-  const loadChats = async () => {
+  const loadChats = useCallback(async () => {
     if (!accessToken) return;
 
     try {
@@ -35,19 +32,14 @@ export function ChatSidebar({ selectedChatId, onSelectChat, onNewChat }: ChatSid
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [accessToken]);
 
-  const handleNewChat = async () => {
-    if (!accessToken) return;
+  useEffect(() => {
+    loadChats();
+  }, [refreshTrigger, loadChats]);
 
-    try {
-      const newChat = await apiService.createChat(accessToken);
-      setChats([newChat, ...chats]);
-      onNewChat();
-      onSelectChat(newChat.id);
-    } catch (error) {
-      console.error('Failed to create chat:', error);
-    }
+  const handleNewChat = () => {
+    onNewChat();
   };
 
   const handleDeleteChat = async (chatId: string) => {
@@ -57,7 +49,12 @@ export function ChatSidebar({ selectedChatId, onSelectChat, onNewChat }: ChatSid
 
     try {
       await apiService.deleteChat(accessToken, chatId);
-      setChats(chats.filter((chat) => chat.id !== chatId)); // Remove chat from state
+      setChats(chats.filter((chat) => chat.id !== chatId));
+      
+      // If the deleted chat was the selected one, go to home page
+      if (selectedChatId === chatId) {
+        onNewChat();
+      }
     } catch (error) {
       console.error('Failed to delete chat:', error);
     }
@@ -71,7 +68,7 @@ export function ChatSidebar({ selectedChatId, onSelectChat, onNewChat }: ChatSid
             <div className="bg-blue-600 p-2 rounded-lg">
               <MessageSquare className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-white">chatIITD</h1>
+            <h1 className="text-xl font-bold text-white">ChatIITD</h1>
           </div>
           <button
             onClick={logout}
@@ -103,27 +100,6 @@ export function ChatSidebar({ selectedChatId, onSelectChat, onNewChat }: ChatSid
         ) : (
           <div className="p-2 space-y-1">
             {chats.map((chat) => (
-              // <button
-              //   key={chat.id}
-              //   onClick={() => onSelectChat(chat.id)}
-              //   className={`w-full text-left px-4 py-3 rounded-lg transition ${
-              //     selectedChatId === chat.id
-              //       ? 'bg-gray-800 text-white'
-              //       : 'text-gray-300 hover:bg-gray-800/50'
-              //   }`}
-              // >
-              //   <div className="flex items-center gap-3">
-              //     <MessageSquare className="w-4 h-4 flex-shrink-0" />
-              //     <div className="flex-1 min-w-0">
-              //       <div className="font-medium truncate">
-              //         {chat.title || 'Untitled Chat'}
-              //       </div>
-              //       <div className="text-xs text-gray-500 mt-1">
-              //         {new Date(chat.created_at).toLocaleDateString()}
-              //       </div>
-              //     </div>
-              //   </div>
-              // </button>
               <div
                 key={chat.id}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition ${

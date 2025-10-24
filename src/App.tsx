@@ -7,6 +7,16 @@ import { ChatInterface } from './components/ChatInterface';
 function ChatApp() {
   const { isAuthenticated, isLoading } = useAuth();
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleChatCreated = (chatId: string) => {
+    setSelectedChatId(chatId);
+    setRefreshTrigger((prev) => prev + 1); // Trigger sidebar refresh
+  };
+
+  const handleNewChat = () => {
+    setSelectedChatId(null);
+  };
 
   if (isLoading) {
     return (
@@ -25,9 +35,10 @@ function ChatApp() {
       <ChatSidebar
         selectedChatId={selectedChatId}
         onSelectChat={setSelectedChatId}
-        onNewChat={() => setSelectedChatId(null)}
+        onNewChat={handleNewChat}
+        refreshTrigger={refreshTrigger}
       />
-      <ChatInterface chatId={selectedChatId} />
+      <ChatInterface chatId={selectedChatId} onChatCreated={handleChatCreated} />
     </div>
   );
 }

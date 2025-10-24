@@ -38,7 +38,7 @@ export function Login() {
               <MessageSquare className="w-8 h-8 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">chatIITD</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">ChatIITD</h1>
           <p className="text-gray-400">Sign in with Google to continue</p>
         </div>
 

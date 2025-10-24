@@ -35,15 +35,15 @@ class ApiService {
     return response.json();
   }
 
-  async createChat(accessToken: string, title: string | null = null): Promise<Chat> {
-    const response = await fetch(`${API_BASE_URL}/chats`, {
+  async createNewChat(accessToken: string, content: string): Promise<{ chat: Chat; message: Message; title: string }> {
+    const response = await fetch(`${API_BASE_URL}/chats/new`, {
       method: 'POST',
       headers: this.getHeaders(accessToken),
-      body: JSON.stringify({ title }),
+      body: JSON.stringify({ content }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create chat');
+      throw new Error('Failed to create new chat');
     }
 
     return response.json();
