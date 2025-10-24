@@ -3,6 +3,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { apiService, Chat } from '../services/api';
 import { Plus, MessageSquare, LogOut, Loader2 } from 'lucide-react';
 
+import { Menu, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
+import { MoreVertical } from 'lucide-react';
+
+
 interface ChatSidebarProps {
   selectedChatId: string | null;
   onSelectChat: (chatId: string) => void;
@@ -42,6 +47,19 @@ export function ChatSidebar({ selectedChatId, onSelectChat, onNewChat }: ChatSid
       onSelectChat(newChat.id);
     } catch (error) {
       console.error('Failed to create chat:', error);
+    }
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    if (!accessToken) return;
+    const confirmed = window.confirm('Are you sure you want to delete this chat?');
+    if (!confirmed) return;
+
+    try {
+      await apiService.deleteChat(accessToken, chatId);
+      setChats(chats.filter((chat) => chat.id !== chatId)); // Remove chat from state
+    } catch (error) {
+      console.error('Failed to delete chat:', error);
     }
   };
 
@@ -85,27 +103,81 @@ export function ChatSidebar({ selectedChatId, onSelectChat, onNewChat }: ChatSid
         ) : (
           <div className="p-2 space-y-1">
             {chats.map((chat) => (
-              <button
+              // <button
+              //   key={chat.id}
+              //   onClick={() => onSelectChat(chat.id)}
+              //   className={`w-full text-left px-4 py-3 rounded-lg transition ${
+              //     selectedChatId === chat.id
+              //       ? 'bg-gray-800 text-white'
+              //       : 'text-gray-300 hover:bg-gray-800/50'
+              //   }`}
+              // >
+              //   <div className="flex items-center gap-3">
+              //     <MessageSquare className="w-4 h-4 flex-shrink-0" />
+              //     <div className="flex-1 min-w-0">
+              //       <div className="font-medium truncate">
+              //         {chat.title || 'Untitled Chat'}
+              //       </div>
+              //       <div className="text-xs text-gray-500 mt-1">
+              //         {new Date(chat.created_at).toLocaleDateString()}
+              //       </div>
+              //     </div>
+              //   </div>
+              // </button>
+              <div
                 key={chat.id}
-                onClick={() => onSelectChat(chat.id)}
-                className={`w-full text-left px-4 py-3 rounded-lg transition ${
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition ${
                   selectedChatId === chat.id
                     ? 'bg-gray-800 text-white'
                     : 'text-gray-300 hover:bg-gray-800/50'
                 }`}
               >
-                <div className="flex items-center gap-3">
+                {/* Left: chat content */}
+                <div
+                  className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                  onClick={() => onSelectChat(chat.id)}
+                >
                   <MessageSquare className="w-4 h-4 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">
-                      {chat.title || 'Untitled Chat'}
-                    </div>
+                    <div className="font-medium truncate">{chat.title || 'Untitled Chat'}</div>
                     <div className="text-xs text-gray-500 mt-1">
                       {new Date(chat.created_at).toLocaleDateString()}
                     </div>
                   </div>
                 </div>
-              </button>
+
+                {/* Right: ellipsis menu */}
+                <Menu as="div" className="relative inline-block text-left">
+                  <Menu.Button className="p-1 hover:bg-gray-700 rounded-full transition">
+                    <MoreVertical className="w-4 h-4 text-gray-400 hover:text-white" />
+                  </Menu.Button>
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-100"
+                    enterFrom="transform opacity-0 scale-95"
+                    enterTo="transform opacity-100 scale-100"
+                    leave="transition ease-in duration-75"
+                    leaveFrom="transform opacity-100 scale-100"
+                    leaveTo="transform opacity-0 scale-95"
+                  >
+                    <Menu.Items className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-md shadow-lg focus:outline-none z-10">
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button
+                            onClick={() => handleDeleteChat(chat.id)}
+                            className={`${
+                              active ? 'bg-red-600 text-white' : 'text-gray-300'
+                            } group flex w-full items-center px-4 py-2 text-sm`}
+                          >
+                            Delete Chat
+                          </button>
+                        )}
+                      </Menu.Item>
+                    </Menu.Items>
+                  </Transition>
+                </Menu>
+              </div>
+
             ))}
           </div>
         )}

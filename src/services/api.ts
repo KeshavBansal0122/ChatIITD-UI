@@ -73,6 +73,20 @@ class ApiService {
     return response.json();
   }
 
+  async deleteChat(token: string, chatId: string) {
+    const res = await fetch(`${API_BASE_URL}/chats/${chatId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!res.ok) throw new Error('Failed to delete chat');
+    return true;
+  }
+
+
   async sendMessage(accessToken: string, chatId: string, content: string): Promise<Message> {
     const response = await fetch(`${API_BASE_URL}/chats/${chatId}/messages`, {
       method: 'POST',
