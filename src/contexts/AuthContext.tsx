@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 
 interface AuthContextType {
   accessToken: string | null;
@@ -23,11 +23,15 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const lastBootstrappedBaseRef = useRef<string | null>(null);
 
   useEffect(() => {
-    let isActive = true;
+    if (lastBootstrappedBaseRef.current === apiBaseUrl) {
+      return;
+    }
 
-    const bootstrapAuth = async () => {
+  let isActive = true;
+  const rafId = requestAnimationFrame(async () => {
       const params = new URLSearchParams(window.location.search);
       const codeFromUrl = params.get('code');
       const stateFromUrl = params.get('state');
@@ -94,15 +98,15 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
         }
 
         if (isActive) {
+          lastBootstrappedBaseRef.current = apiBaseUrl;
           setIsLoading(false);
         }
       }
-    };
-
-    bootstrapAuth();
+    });
 
     return () => {
       isActive = false;
+      cancelAnimationFrame(rafId);
     };
   }, [apiBaseUrl]);
 
