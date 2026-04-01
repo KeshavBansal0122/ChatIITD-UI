@@ -24,8 +24,19 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const lastBootstrappedBaseRef = useRef<string | null>(null);
+  
+  // Demo mode check
+  const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
 
   useEffect(() => {
+    // Demo mode: immediately set fake auth and skip all OAuth logic
+    if (isDemoMode) {
+      setAccessToken('demo_fake_token_for_presentation');
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     if (lastBootstrappedBaseRef.current === apiBaseUrl) {
       return;
     }
@@ -108,7 +119,7 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
       isActive = false;
       cancelAnimationFrame(rafId);
     };
-  }, [apiBaseUrl]);
+  }, [apiBaseUrl, isDemoMode]);
 
   const login = () => {
     if (!clientId) {
@@ -117,15 +128,37 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
     }
 
     setError(null);
-    const base = oauthBaseUrl.replace(/\/+$/, '');
-
-    const query = new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: redirectUri,
-    });
-
-    const signInUrl = `${base}/signin?${query.toString()}`;
-    window.location.href = signInUrl;
+    
+    // Use the backend endpoint to get the OAuth signin URL
+    // This ensures consistency with the backend OAuth configuration
+    const getSigninUrl = async () => {
+      try {
+        const query = new URLSearchParams({
+          redirect_uri: redirectUri,
+        });
+        
+        const response = await fetch(`${apiBaseUrl}/auth/signin-url?${query.toString()}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to get OAuth signin URL from backend');
+        }
+        
+        const { signin_url } = await response.json();
+        window.location.href = signin_url;
+      } catch (err) {
+        console.error('Error getting signin URL:', err);
+        // Fallback to direct OAuth URL construction if backend endpoint fails
+        const base = oauthBaseUrl.replace(/\/+$/, '');
+        const query = new URLSearchParams({
+          client_id: clientId,
+          redirect_uri: redirectUri,
+        });
+        const signInUrl = `${base}/signin?${query.toString()}`;
+        window.location.href = signInUrl;
+      }
+    };
+    
+    getSigninUrl();
     return true;
   };
 
@@ -152,12 +185,29 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
+  
+  // In demo mode, use fake values and bypass all validation
+  if (isDemoMode) {
+    const demoFrontendUrl = import.meta.env.VITE_FRONTEND_URL ?? 'http://localhost:5173';
+    const demoBackendUrl = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8000';
+    return (
+      <AuthProviderInner 
+        clientId="demo_client_id" 
+        oauthBaseUrl="https://demo.oauth.url" 
+        redirectUri={`${demoFrontendUrl}/callback`}
+        apiBaseUrl={demoBackendUrl}
+      >
+        {children}
+      </AuthProviderInner>
+    );
+  }
+
   const clientId = import.meta.env.VITE_DEVCLUB_CLIENT_ID;
-  const oauthBaseUrl = import.meta.env.VITE_DEVCLUB_OAUTH_BASE_URL ?? 'https://oauthdevclub.vercel.app';
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
-  const normalizedApiBase = apiBaseUrl ? apiBaseUrl.replace(/\/+$/, '') : undefined;
-  const redirectUri =
-    import.meta.env.VITE_DEVCLUB_REDIRECT_URI ?? (normalizedApiBase ? `${normalizedApiBase}/auth/callback` : undefined);
+  const oauthBaseUrl = import.meta.env.VITE_DEVCLUB_OAUTH_BASE_URL ?? 'https://oauth.devclub.in';
+  const frontendUrl = import.meta.env.VITE_FRONTEND_URL;
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const redirectUri = frontendUrl ? `${frontendUrl.replace(/\/+$/, '')}/callback` : undefined;
 
   if (!clientId) {
     return (
@@ -176,26 +226,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         <div className="bg-red-900/20 border border-red-800 text-red-400 px-6 py-4 rounded-lg max-w-md">
           <h2 className="font-bold mb-2">Configuration Error</h2>
           <p className="text-sm">
-            Unable to determine the OAuth redirect URI. Set VITE_DEVCLUB_REDIRECT_URI or ensure VITE_API_BASE_URL is configured.
+            Unable to determine the OAuth redirect URI. Please set VITE_FRONTEND_URL in your environment variables.
           </p>
         </div>
       </div>
     );
   }
 
-  if (!normalizedApiBase) {
+  if (!backendUrl) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
         <div className="bg-red-900/20 border border-red-800 text-red-400 px-6 py-4 rounded-lg max-w-md">
           <h2 className="font-bold mb-2">Configuration Error</h2>
-          <p className="text-sm">API base URL is not configured. Please set VITE_API_BASE_URL to continue.</p>
+          <p className="text-sm">Backend URL is not configured. Please set VITE_BACKEND_URL to continue.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <AuthProviderInner clientId={clientId} oauthBaseUrl={oauthBaseUrl} redirectUri={redirectUri} apiBaseUrl={normalizedApiBase}>
+    <AuthProviderInner clientId={clientId} oauthBaseUrl={oauthBaseUrl} redirectUri={redirectUri} apiBaseUrl={backendUrl.replace(/\/+$/, '')}>
       {children}
     </AuthProviderInner>
   );
