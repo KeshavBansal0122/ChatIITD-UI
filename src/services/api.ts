@@ -1,5 +1,12 @@
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
+export class AuthError extends Error {
+  constructor(message: string = 'Authentication failed') {
+    super(message);
+    this.name = 'AuthError';
+  }
+}
+
 export interface Chat {
   id: string;
   user_id: string;
@@ -35,6 +42,10 @@ class ApiService {
       headers: this.getHeaders(accessToken),
     });
 
+    if (response.status === 401) {
+      throw new AuthError();
+    }
+
     if (!response.ok) {
       throw new Error('Failed to fetch chats');
     }
@@ -67,6 +78,10 @@ class ApiService {
       body: JSON.stringify({ content }),
     });
 
+    if (response.status === 401) {
+      throw new AuthError();
+    }
+
     if (!response.ok) {
       throw new Error('Failed to create new chat');
     }
@@ -79,6 +94,10 @@ class ApiService {
       headers: this.getHeaders(accessToken),
     });
 
+    if (response.status === 401) {
+      throw new AuthError();
+    }
+
     if (!response.ok) {
       throw new Error('Failed to fetch chat');
     }
@@ -90,6 +109,10 @@ class ApiService {
     const response = await fetch(`${API_BASE_URL}/chats/${chatId}/messages`, {
       headers: this.getHeaders(accessToken),
     });
+
+    if (response.status === 401) {
+      throw new AuthError();
+    }
 
     if (!response.ok) {
       throw new Error('Failed to fetch messages');
@@ -107,6 +130,10 @@ class ApiService {
       },
     });
 
+    if (res.status === 401) {
+      throw new AuthError();
+    }
+
     if (!res.ok) throw new Error('Failed to delete chat');
     return true;
   }
@@ -118,6 +145,10 @@ class ApiService {
       headers: this.getHeaders(accessToken),
       body: JSON.stringify({ content }),
     });
+
+    if (response.status === 401) {
+      throw new AuthError();
+    }
 
     if (!response.ok) {
       throw new Error('Failed to send message');
@@ -137,6 +168,10 @@ class ApiService {
       headers: this.getHeaders(accessToken),
       body: JSON.stringify({ content }),
     });
+
+    if (response.status === 401) {
+      throw new AuthError();
+    }
 
     if (!response.ok) {
       throw new Error('Failed to send message');

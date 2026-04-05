@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { apiService, Chat } from '../services/api';
+import { apiService, Chat, AuthError } from '../services/api';
 import { Plus, MessageSquare, LogOut, Loader2 } from 'lucide-react';
 
 import { Menu, Transition } from '@headlessui/react';
@@ -18,7 +18,7 @@ interface ChatSidebarProps {
 export function ChatSidebar({ selectedChatId, onSelectChat, onNewChat, refreshTrigger }: ChatSidebarProps) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { accessToken, logout } = useAuth();
+  const { accessToken, logout, handleAuthError } = useAuth();
 
   const loadChats = useCallback(async () => {
     if (!accessToken) return;
@@ -28,11 +28,15 @@ export function ChatSidebar({ selectedChatId, onSelectChat, onNewChat, refreshTr
       const fetchedChats = await apiService.getChats(accessToken);
       setChats(fetchedChats);
     } catch (error) {
+      if (error instanceof AuthError) {
+        handleAuthError();
+        return;
+      }
       console.error('Failed to load chats:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, handleAuthError]);
 
   useEffect(() => {
     loadChats();
@@ -56,6 +60,10 @@ export function ChatSidebar({ selectedChatId, onSelectChat, onNewChat, refreshTr
         onNewChat();
       }
     } catch (error) {
+      if (error instanceof AuthError) {
+        handleAuthError();
+        return;
+      }
       console.error('Failed to delete chat:', error);
     }
   };

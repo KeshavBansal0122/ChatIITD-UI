@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from 'react';
 
 interface AuthContextType {
   accessToken: string | null;
@@ -7,6 +7,7 @@ interface AuthContextType {
   logout: () => void;
   isLoading: boolean;
   error: string | null;
+  handleAuthError: () => void;  // Called when API returns 401
 }
 
 interface AuthProviderInnerProps {
@@ -168,6 +169,13 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
     localStorage.removeItem('access_token');
   };
 
+  const handleAuthError = useCallback(() => {
+    // Called when API returns 401 - clear token and redirect to login
+    setAccessToken(null);
+    setError('Your session has expired. Please sign in again.');
+    localStorage.removeItem('access_token');
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -177,6 +185,7 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
         logout,
         isLoading,
         error,
+        handleAuthError,
       }}
     >
       {children}
