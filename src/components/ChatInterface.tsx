@@ -15,6 +15,7 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
   const { accessToken } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +43,7 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, streamingContent]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -55,8 +56,9 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
     const messageContent = inputMessage.trim();
     setInputMessage('');
     setIsSending(true);
+    setStreamingContent('');
 
-    // If no chatId, this is the first message - create a new chat
+    // If no chatId, this is the first message - create a new chat with streaming
     if (!chatId) {
       const userMessage: Message = {
         id: `temp-${Date.now()}`,
@@ -69,30 +71,58 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
       setMessages([userMessage]);
 
       try {
-        const response = await apiService.createNewChat(accessToken, messageContent);
+        let newChatId: string | null = null;
         
-        // Update the user message with the actual message ID from the response
-        const actualUserMessage: Message = {
-          id: response.message.id,
-          chat_id: response.chat.id,
-          sender: 'user',
-          content: messageContent,
-          created_at: userMessage.created_at,
-        };
-
-        setMessages([actualUserMessage, response.message]);
-        onChatCreated(response.chat.id);
+        await apiService.createNewChatStream(accessToken, messageContent, {
+          onChatCreated: (chat) => {
+            newChatId = chat.id;
+            // Update the user message with the actual chat ID
+            setMessages(prev => prev.map(m => 
+              m.id === userMessage.id ? { ...m, chat_id: chat.id } : m
+            ));
+            onChatCreated(chat.id);
+          },
+          onToken: (token) => {
+            setStreamingContent(prev => prev + token);
+          },
+          onDone: (messageId) => {
+            // Replace streaming content with final message
+            setStreamingContent(prev => {
+              const finalContent = prev;
+              setMessages(msgs => [
+                ...msgs.filter(m => m.id !== userMessage.id),
+                { ...userMessage, chat_id: newChatId || '' },
+                {
+                  id: messageId,
+                  chat_id: newChatId || '',
+                  sender: 'assistant',
+                  content: finalContent,
+                  created_at: new Date().toISOString(),
+                },
+              ]);
+              return '';
+            });
+            setIsSending(false);
+          },
+          onError: (error) => {
+            console.error('Streaming error:', error);
+            setMessages([]);
+            setInputMessage(messageContent);
+            setStreamingContent('');
+            setIsSending(false);
+          },
+        });
       } catch (error) {
         console.error('Failed to create new chat:', error);
         setMessages([]);
         setInputMessage(messageContent);
-      } finally {
+        setStreamingContent('');
         setIsSending(false);
       }
       return;
     }
 
-    // Normal message sending for existing chat
+    // Normal message sending for existing chat with streaming
     const userMessage: Message = {
       id: `temp-${Date.now()}`,
       chat_id: chatId,
@@ -104,17 +134,42 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      const assistantMessage = await apiService.sendMessage(accessToken, chatId, messageContent);
-      setMessages((prev) => [
-        ...prev.filter((m) => m.id !== userMessage.id),
-        { ...userMessage, id: assistantMessage.id },
-        assistantMessage,
-      ]);
+      await apiService.sendMessageStream(accessToken, chatId, messageContent, {
+        onToken: (token) => {
+          setStreamingContent(prev => prev + token);
+        },
+        onDone: (messageId) => {
+          // Replace streaming content with final message
+          setStreamingContent(prev => {
+            const finalContent = prev;
+            setMessages(msgs => [
+              ...msgs.filter(m => m.id !== userMessage.id),
+              { ...userMessage, id: `user-${Date.now()}` },
+              {
+                id: messageId,
+                chat_id: chatId,
+                sender: 'assistant',
+                content: finalContent,
+                created_at: new Date().toISOString(),
+              },
+            ]);
+            return '';
+          });
+          setIsSending(false);
+        },
+        onError: (error) => {
+          console.error('Streaming error:', error);
+          setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
+          setInputMessage(messageContent);
+          setStreamingContent('');
+          setIsSending(false);
+        },
+      });
     } catch (error) {
       console.error('Failed to send message:', error);
       setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
       setInputMessage(messageContent);
-    } finally {
+      setStreamingContent('');
       setIsSending(false);
     }
   };
@@ -136,7 +191,7 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 text-gray-500 animate-spin" />
           </div>
-        ) : messages.length === 0 ? (
+        ) : messages.length === 0 && !streamingContent ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-gray-500">No messages yet. Start the conversation!</p>
           </div>
@@ -204,6 +259,51 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
                 )}
               </div>
             ))}
+            {/* Streaming message */}
+            {streamingContent && (
+              <div className="flex gap-4 justify-start">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                  <Bot className="w-5 h-5 text-white" />
+                </div>
+                <div className="max-w-2xl px-4 py-3 rounded-2xl bg-gray-800 text-gray-100">
+                  <div className="prose prose-invert max-w-none">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                        ul: ({ children }) => <ul className="list-disc list-inside mb-2">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal list-inside mb-2">{children}</ol>,
+                        li: ({ children }) => <li className="mb-1">{children}</li>,
+                        code: ({ children, className }) => {
+                          const isInline = !className;
+                          return isInline ? (
+                            <code className="bg-gray-900 px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>
+                          ) : (
+                            <code className="block bg-gray-900 p-3 rounded-lg text-sm font-mono overflow-x-auto mb-2">{children}</code>
+                          );
+                        },
+                        pre: ({ children }) => <div className="mb-2">{children}</div>,
+                        h1: ({ children }) => <h1 className="text-2xl font-bold mb-2">{children}</h1>,
+                        h2: ({ children }) => <h2 className="text-xl font-bold mb-2">{children}</h2>,
+                        h3: ({ children }) => <h3 className="text-lg font-bold mb-2">{children}</h3>,
+                        strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                        em: ({ children }) => <em className="italic">{children}</em>,
+                        a: ({ children, href }) => (
+                          <a href={href} className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">
+                            {children}
+                          </a>
+                        ),
+                        blockquote: ({ children }) => (
+                          <blockquote className="border-l-4 border-gray-600 pl-4 italic mb-2">{children}</blockquote>
+                        ),
+                      }}
+                    >
+                      {streamingContent}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
         )}

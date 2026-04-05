@@ -15,6 +15,13 @@ export interface Message {
   created_at: string;
 }
 
+export interface StreamCallbacks {
+  onToken: (token: string) => void;
+  onDone: (messageId: string) => void;
+  onError: (error: string) => void;
+  onChatCreated?: (chat: { id: string; title: string }) => void;
+}
+
 class ApiService {
   private getHeaders(accessToken: string) {
     return {
@@ -47,6 +54,24 @@ class ApiService {
     }
 
     return response.json();
+  }
+
+  async createNewChatStream(
+    accessToken: string,
+    content: string,
+    callbacks: StreamCallbacks
+  ): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/chats/new/stream`, {
+      method: 'POST',
+      headers: this.getHeaders(accessToken),
+      body: JSON.stringify({ content }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create new chat');
+    }
+
+    await this.processSSEStream(response, callbacks);
   }
 
   async getChat(accessToken: string, chatId: string): Promise<Chat> {
@@ -99,6 +124,71 @@ class ApiService {
     }
 
     return response.json();
+  }
+
+  async sendMessageStream(
+    accessToken: string,
+    chatId: string,
+    content: string,
+    callbacks: StreamCallbacks
+  ): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/chats/${chatId}/messages/stream`, {
+      method: 'POST',
+      headers: this.getHeaders(accessToken),
+      body: JSON.stringify({ content }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to send message');
+    }
+
+    await this.processSSEStream(response, callbacks);
+  }
+
+  private async processSSEStream(response: Response, callbacks: StreamCallbacks): Promise<void> {
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No response body');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.slice(6);
+            if (jsonStr.trim()) {
+              try {
+                const data = JSON.parse(jsonStr);
+                
+                if (data.chat && callbacks.onChatCreated) {
+                  callbacks.onChatCreated(data.chat);
+                } else if (data.token) {
+                  callbacks.onToken(data.token);
+                } else if (data.done) {
+                  callbacks.onDone(data.message_id);
+                } else if (data.error) {
+                  callbacks.onError(data.error);
+                }
+              } catch (e) {
+                console.error('Failed to parse SSE data:', e);
+              }
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
   }
 }
 
