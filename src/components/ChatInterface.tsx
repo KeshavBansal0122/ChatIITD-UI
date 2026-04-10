@@ -2,13 +2,14 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService, Message, AuthError } from '../services/api';
 import { useChatWebSocket, ChatStatus } from '../hooks';
-import { Send, Bot, User, Copy, Check, Square } from 'lucide-react';
+import { Send, Bot, User, Copy, Check, Square, Menu } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 interface ChatInterfaceProps {
   chatId: string | null;
   onChatCreated: (chatId: string) => void;
+  onOpenMobileMenu?: () => void;
 }
 
 // Format tool status message for display
@@ -149,7 +150,7 @@ function MarkdownContent({ content }: { content: string }) {
   );
 }
 
-export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
+export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -301,10 +302,23 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
 
   return (
     <div className="flex-1 flex flex-col bg-gray-950 h-full">
+      {/* Mobile header with menu button */}
+      {onOpenMobileMenu && (
+        <div className="md:hidden bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+          <button
+            onClick={onOpenMobileMenu}
+            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all duration-200"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <h1 className="text-lg font-semibold text-white">ChatIITD</h1>
+        </div>
+      )}
+      
       <div className="flex-1 overflow-y-auto p-4">
         {!chatId && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center">
+            <div className="text-center px-4">
               <div className="bg-gray-900 p-6 rounded-full mb-4 inline-block">
                 <MessageSquare className="w-12 h-12 text-gray-600" />
               </div>
@@ -325,20 +339,22 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
             <p className="text-gray-500">No messages yet. Start the conversation!</p>
           </div>
         ) : (
-          <div className="max-w-4xl mx-auto space-y-4">
+          <div className="max-w-4xl mx-auto space-y-6">
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex gap-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex gap-3 sm:gap-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {message.sender === 'assistant' && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                    <Bot className="w-5 h-5 text-white" />
+                  <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
+                    <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                 )}
                 <div
-                  className={`group relative max-w-2xl px-4 py-3 rounded-2xl ${
-                    message.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-100'
+                  className={`group relative max-w-[85%] sm:max-w-2xl px-3 py-2 sm:px-4 sm:py-3 rounded-2xl transition-all duration-200 ${
+                    message.sender === 'user' 
+                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg' 
+                      : 'bg-gray-800 text-gray-100 shadow-md'
                   }`}
                 >
                   <MarkdownContent content={message.content} />
@@ -349,8 +365,8 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
                   )}
                 </div>
                 {message.sender === 'user' && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-                    <User className="w-5 h-5 text-white" />
+                  <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-700 flex items-center justify-center shadow-lg">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </div>
                 )}
               </div>
@@ -358,11 +374,11 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
 
             {/* Status indicator when processing */}
             {isGenerating && !streamingContent && (
-              <div className="flex gap-4 justify-start">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-white" />
+              <div className="flex gap-3 sm:gap-4 justify-start">
+                <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
+                  <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <div className="px-4 py-3 rounded-2xl bg-gray-800">
+                <div className="px-3 py-2 sm:px-4 sm:py-3 rounded-2xl bg-gray-800 shadow-md">
                   <StatusIndicator status={status} toolName={currentTool} />
                 </div>
               </div>
@@ -370,11 +386,11 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
 
             {/* Streaming message */}
             {streamingContent && (
-              <div className="flex gap-4 justify-start">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-white" />
+              <div className="flex gap-3 sm:gap-4 justify-start">
+                <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
+                  <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <div className="group relative max-w-2xl px-4 py-3 rounded-2xl bg-gray-800 text-gray-100">
+                <div className="group relative max-w-[85%] sm:max-w-2xl px-3 py-2 sm:px-4 sm:py-3 rounded-2xl bg-gray-800 text-gray-100 shadow-md">
                   <MarkdownContent content={streamingContent} />
                   {/* Show thinking status below streaming content if still processing tools */}
                   {(status === 'thinking' || status === 'tool_call') && (
@@ -390,22 +406,22 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
         )}
       </div>
 
-      <div className="border-t border-gray-800 p-4 bg-gray-900">
+      <div className="border-t border-gray-800 p-3 sm:p-4 bg-gray-900">
         <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <input
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type your message..."
               disabled={isGenerating}
-              className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition disabled:opacity-50"
+              className="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 disabled:opacity-50 text-base"
             />
             {isGenerating ? (
               <button
                 type="button"
                 onClick={handleStopGeneration}
-                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition flex items-center gap-2"
+                className="px-4 py-2 sm:px-6 sm:py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-red-500/50"
                 title="Stop generation"
               >
                 <Square className="w-5 h-5 fill-current" />
@@ -414,7 +430,7 @@ export function ChatInterface({ chatId, onChatCreated }: ChatInterfaceProps) {
               <button
                 type="submit"
                 disabled={!inputMessage.trim()}
-                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-blue-500/50"
               >
                 <Send className="w-5 h-5" />
               </button>

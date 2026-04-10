@@ -154,7 +154,7 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
           client_id: clientId,
           redirect_uri: redirectUri,
         });
-        const signInUrl = `${base}/signin?${query.toString()}`;
+        const signInUrl = `${base}/auth/signin?${query.toString()}`;
         window.location.href = signInUrl;
       }
     };

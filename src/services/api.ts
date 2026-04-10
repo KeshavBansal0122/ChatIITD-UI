@@ -29,6 +29,53 @@ export interface StreamCallbacks {
   onChatCreated?: (chat: { id: string; title: string }) => void;
 }
 
+// Profile & Courses types
+export interface UserProfile {
+  id: number;
+  email: string;
+  name: string | null;
+  kerberos: string | null;
+  entry_number: string | null;
+  department: string | null;
+  hostel: string | null;
+  category: string | null;
+  programme_code: string | null;
+  programme_name: string | null;
+  year_of_joining: number | null;
+  max_semesters: number;
+}
+
+export interface UserCourses {
+  courses: Record<string, string[]>;
+}
+
+export interface CourseValidationResult {
+  valid: string[];
+  invalid: string[];
+}
+
+export interface UserCoursesUpdateResponse {
+  courses: Record<string, string[]>;
+  validation: CourseValidationResult;
+}
+
+export interface DefaultCoursesResponse {
+  programme_code: string | null;
+  programme_name: string | null;
+  year_of_joining: number | null;
+  current_semester: number;
+  courses: Record<string, string[]>;
+}
+
+export interface CourseSearchResult {
+  code: string;
+  name: string;
+}
+
+export interface CourseSearchResponse {
+  courses: CourseSearchResult[];
+}
+
 class ApiService {
   private getHeaders(accessToken: string) {
     return {
@@ -224,6 +271,90 @@ class ApiService {
     } finally {
       reader.releaseLock();
     }
+  }
+
+  // ---------- User Profile & Courses API ----------
+
+  async getUserProfile(accessToken: string): Promise<UserProfile> {
+    const response = await fetch(`${API_BASE_URL}/user/profile`, {
+      headers: this.getHeaders(accessToken),
+    });
+
+    if (response.status === 401) {
+      throw new AuthError();
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch user profile');
+    }
+
+    return response.json();
+  }
+
+  async getUserCourses(accessToken: string): Promise<UserCourses> {
+    const response = await fetch(`${API_BASE_URL}/user/courses`, {
+      headers: this.getHeaders(accessToken),
+    });
+
+    if (response.status === 401) {
+      throw new AuthError();
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch user courses');
+    }
+
+    return response.json();
+  }
+
+  async updateUserCourses(accessToken: string, courses: Record<string, string[]>): Promise<UserCoursesUpdateResponse> {
+    const response = await fetch(`${API_BASE_URL}/user/courses`, {
+      method: 'PUT',
+      headers: this.getHeaders(accessToken),
+      body: JSON.stringify({ courses }),
+    });
+
+    if (response.status === 401) {
+      throw new AuthError();
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to update user courses');
+    }
+
+    return response.json();
+  }
+
+  async getDefaultCourses(accessToken: string): Promise<DefaultCoursesResponse> {
+    const response = await fetch(`${API_BASE_URL}/user/courses/defaults`, {
+      headers: this.getHeaders(accessToken),
+    });
+
+    if (response.status === 401) {
+      throw new AuthError();
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch default courses');
+    }
+
+    return response.json();
+  }
+
+  async searchCourses(accessToken: string, query: string): Promise<CourseSearchResponse> {
+    const response = await fetch(`${API_BASE_URL}/courses/search?q=${encodeURIComponent(query)}`, {
+      headers: this.getHeaders(accessToken),
+    });
+
+    if (response.status === 401) {
+      throw new AuthError();
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to search courses');
+    }
+
+    return response.json();
   }
 }
 
