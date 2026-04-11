@@ -148,14 +148,7 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
         window.location.href = signin_url;
       } catch (err) {
         console.error('Error getting signin URL:', err);
-        // Fallback to direct OAuth URL construction if backend endpoint fails
-        const base = oauthBaseUrl.replace(/\/+$/, '');
-        const query = new URLSearchParams({
-          client_id: clientId,
-          redirect_uri: redirectUri,
-        });
-        const signInUrl = `${base}/auth/signin?${query.toString()}`;
-        window.location.href = signInUrl;
+        setError('Failed to get sign-in URL from server. Please try again.');
       }
     };
     
