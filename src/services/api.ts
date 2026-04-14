@@ -20,6 +20,7 @@ export interface Message {
   sender: 'user' | 'assistant';
   content: string;
   created_at: string;
+  isError?: boolean;
 }
 
 export interface StreamCallbacks {
@@ -77,11 +78,14 @@ export interface CourseSearchResponse {
 }
 
 class ApiService {
-  private getHeaders(accessToken: string) {
-    return {
+  private getHeaders(accessToken: string | null): Record<string, string> {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`,
     };
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+    return headers;
   }
 
   async getChats(accessToken: string): Promise<Chat[]> {
@@ -100,12 +104,16 @@ class ApiService {
     return response.json();
   }
 
-  async createNewChat(accessToken: string, content: string): Promise<{ chat: Chat; message: Message; title: string }> {
+  async createNewChat(accessToken: string | null, content: string): Promise<{ chat: Chat; message: Message; title: string }> {
     const response = await fetch(`${API_BASE_URL}/chats/new`, {
       method: 'POST',
       headers: this.getHeaders(accessToken),
       body: JSON.stringify({ content }),
     });
+
+    if (response.status === 401) {
+      throw new AuthError();
+    }
 
     if (!response.ok) {
       throw new Error('Failed to create new chat');
@@ -115,7 +123,7 @@ class ApiService {
   }
 
   async createNewChatStream(
-    accessToken: string,
+    accessToken: string | null,
     content: string,
     callbacks: StreamCallbacks
   ): Promise<void> {

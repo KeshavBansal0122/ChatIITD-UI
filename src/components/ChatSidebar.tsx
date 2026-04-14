@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService, Chat, AuthError } from '../services/api';
-import { Plus, MessageSquare, User, Loader2, ChevronLeft, ChevronRight, Menu as MenuIcon } from 'lucide-react';
+import { Plus, MessageSquare, User, Loader2, ChevronLeft, ChevronRight, Menu as MenuIcon, LogIn } from 'lucide-react';
 
 import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
@@ -33,10 +33,13 @@ export function ChatSidebar({
   const navigate = useNavigate();
   const [chats, setChats] = useState<Chat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { accessToken, handleAuthError } = useAuth();
+  const { accessToken, isGuest, handleAuthError } = useAuth();
 
   const loadChats = useCallback(async () => {
-    if (!accessToken) return;
+    if (!accessToken || isGuest) {
+      setIsLoading(false);
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -51,7 +54,7 @@ export function ChatSidebar({
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken, handleAuthError]);
+  }, [accessToken, isGuest, handleAuthError]);
 
   useEffect(() => {
     loadChats();
@@ -120,7 +123,7 @@ export function ChatSidebar({
             </div>
             
             <div className="flex items-center gap-1">
-              {!isCollapsed && (
+              {!isCollapsed && !isGuest && (
                 <button
                   onClick={() => navigate('/profile')}
                   className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all duration-200"
@@ -170,7 +173,7 @@ export function ChatSidebar({
             {!isCollapsed && 'New Chat'}
           </button>
           
-          {isCollapsed && (
+          {isCollapsed && !isGuest && (
             <button
               onClick={() => navigate('/profile')}
               className="w-full mt-2 flex items-center justify-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all duration-200"
@@ -182,7 +185,24 @@ export function ChatSidebar({
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {isLoading ? (
+          {isGuest ? (
+            !isCollapsed && (
+              <div className="p-4 space-y-4">
+                <div className="bg-blue-900/20 border border-blue-800/50 rounded-lg p-4">
+                  <p className="text-sm text-gray-300 mb-3">
+                    You're using guest mode. Sign in to save your chats and get personalized recommendations.
+                  </p>
+                  <Link
+                    to="/login"
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition font-medium"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    Sign in
+                  </Link>
+                </div>
+              </div>
+            )
+          ) : isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 text-gray-500 animate-spin" />
             </div>

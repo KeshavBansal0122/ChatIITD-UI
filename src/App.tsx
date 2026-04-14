@@ -2,7 +2,27 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginPage, CallbackPage, ChatPage, ProfilePage } from './pages';
 
+/** Allows authenticated users and guests (but not unauthenticated non-guests). */
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isGuest, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-white text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated && !isGuest) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+/** Only allows fully authenticated users (not guests). */
+function AuthRequiredRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -38,9 +58,9 @@ function App() {
           <Route
             path="/profile"
             element={
-              <ProtectedRoute>
+              <AuthRequiredRoute>
                 <ProfilePage />
-              </ProtectedRoute>
+              </AuthRequiredRoute>
             }
           />
           <Route path="*" element={<Navigate to="/" replace />} />

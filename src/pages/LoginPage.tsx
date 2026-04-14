@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Login } from '../components/Login';
 
 export function LoginPage() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isGuest, isLoading } = useAuth();
 
   if (isLoading) {
     return (

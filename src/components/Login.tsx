@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogIn, MessageSquare, Loader2 } from 'lucide-react';
+import { LogIn, MessageSquare, Loader2, UserRound } from 'lucide-react';
 
 export function Login() {
-  const { login, error } = useAuth();
+  const { login, loginAsGuest, error } = useAuth();
   const [localError, setLocalError] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
@@ -35,7 +35,7 @@ export function Login() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">ChatIITD</h1>
-          <p className="text-gray-400">Sign in with DevClub to continue</p>
+          <p className="text-gray-400">Your AI-powered academic assistant for IIT Delhi</p>
         </div>
 
         <div className="bg-gray-900 rounded-2xl shadow-xl p-8 border border-gray-800">
@@ -45,7 +45,7 @@ export function Login() {
             </div>
           )}
 
-          <div className="w-full">
+          <div className="w-full space-y-3">
             <button
               type="button"
               onClick={handleLogin}
@@ -60,15 +60,35 @@ export function Login() {
               ) : (
                 <>
                   <LogIn className="w-5 h-5" />
-                  Continue with DevClub
+                  Sign in with IITD Kerberos
                 </>
               )}
+            </button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-700" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-gray-900 text-gray-500">or</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={loginAsGuest}
+              disabled={isRedirecting}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-800 hover:bg-gray-700 disabled:opacity-70 disabled:cursor-not-allowed text-gray-300 rounded-lg transition font-medium border border-gray-700"
+            >
+              <UserRound className="w-5 h-5" />
+              Continue as Guest
             </button>
           </div>
 
           <div className="mt-6 pt-6 border-t border-gray-800">
             <p className="text-sm text-gray-500 text-center">
-              You will be redirected to DevClub to use your kerberos for authentication.
+              Sign in for personalized recommendations and saved chat history.
+              Guests can chat but conversations are not saved.
             </p>
           </div>
         </div>

@@ -7,7 +7,7 @@ export type ChatStatus = 'idle' | 'connecting' | 'thinking' | 'tool_call' | 'res
 export interface WebSocketCallbacks {
   onToken: (token: string) => void;
   onDone: (messageId?: string) => void;
-  onError: (error: string) => void;
+  onError: (error: string, errorCode?: string) => void;
   onChatCreated?: (chat: { id: string; title: string }) => void;
   onStatusChange?: (status: ChatStatus, toolName?: string) => void;
 }
@@ -68,8 +68,9 @@ export function useChatWebSocket(
   }, []);
 
   const sendMessage = useCallback((content: string, chatId?: string) => {
-    if (!accessToken) {
-      callbacksRef.current.onError('Not authenticated');
+    // For existing chats, require auth; for new chats, allow guests
+    if (!accessToken && chatId) {
+      callbacksRef.current.onError('Not authenticated. Please sign in.', 'unauthorized');
       return;
     }
 
@@ -83,8 +84,10 @@ export function useChatWebSocket(
       ? `${WS_BASE_URL}/ws/chat/${chatId}` 
       : `${WS_BASE_URL}/ws/chat/new`;
     
-    // Add token as query param
-    const wsUrl = `${endpoint}?token=${encodeURIComponent(accessToken)}`;
+    // Add token as query param only if we have one
+    const wsUrl = accessToken 
+      ? `${endpoint}?token=${encodeURIComponent(accessToken)}`
+      : endpoint;
     
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
@@ -132,7 +135,7 @@ export function useChatWebSocket(
           
           case 'error':
             updateStatus('error');
-            callbacksRef.current.onError(data.message);
+            callbacksRef.current.onError(data.message, data.error_code);
             break;
         }
       } catch (e) {
@@ -143,13 +146,13 @@ export function useChatWebSocket(
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
       updateStatus('error');
-      callbacksRef.current.onError('Connection error');
+      callbacksRef.current.onError('Connection error. Please check your network and try again.', 'connection_error');
     };
 
     ws.onclose = (event) => {
       setIsConnected(false);
       if (event.code === 4001) {
-        callbacksRef.current.onError('Authentication failed');
+        callbacksRef.current.onError('Authentication failed. Please sign in again.', 'unauthorized');
       }
       // Don't update status to idle here, let the done/error handler do it
     };

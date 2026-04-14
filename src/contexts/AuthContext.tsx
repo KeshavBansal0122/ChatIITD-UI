@@ -3,7 +3,9 @@ import { createContext, useContext, useState, useEffect, useRef, ReactNode, useC
 interface AuthContextType {
   accessToken: string | null;
   isAuthenticated: boolean;
+  isGuest: boolean;
   login: () => boolean;
+  loginAsGuest: () => void;
   logout: () => void;
   isLoading: boolean;
   error: string | null;
@@ -22,6 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiBaseUrl }: AuthProviderInnerProps) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(() => localStorage.getItem('guest_mode') === 'true');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const lastBootstrappedBaseRef = useRef<string | null>(null);
@@ -34,6 +37,12 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
     if (isDemoMode) {
       setAccessToken('demo_fake_token_for_presentation');
       setError(null);
+      setIsLoading(false);
+      return;
+    }
+
+    // Guest mode: skip OAuth, just mark as not loading
+    if (isGuest) {
       setIsLoading(false);
       return;
     }
@@ -120,7 +129,7 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
       isActive = false;
       cancelAnimationFrame(rafId);
     };
-  }, [apiBaseUrl, isDemoMode]);
+  }, [apiBaseUrl, isDemoMode, isGuest]);
 
   const login = () => {
     if (!clientId) {
@@ -128,6 +137,9 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
       return false;
     }
 
+    // Clear guest mode so the OAuth callback can be processed on return
+    setIsGuest(false);
+    localStorage.removeItem('guest_mode');
     setError(null);
     
     // Use the backend endpoint to get the OAuth signin URL
@@ -156,10 +168,21 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
     return true;
   };
 
+  const loginAsGuest = useCallback(() => {
+    setAccessToken(null);
+    setIsGuest(true);
+    setError(null);
+    setIsLoading(false);
+    localStorage.setItem('guest_mode', 'true');
+    localStorage.removeItem('access_token');
+  }, []);
+
   const logout = () => {
     setAccessToken(null);
+    setIsGuest(false);
     setError(null);
     localStorage.removeItem('access_token');
+    localStorage.removeItem('guest_mode');
   };
 
   const handleAuthError = useCallback(() => {
@@ -174,7 +197,9 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
       value={{
         accessToken,
         isAuthenticated: !!accessToken,
+        isGuest,
         login,
+        loginAsGuest,
         logout,
         isLoading,
         error,

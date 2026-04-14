@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService, Message, AuthError } from '../services/api';
 import { useChatWebSocket, ChatStatus } from '../hooks';
-import { Send, Bot, User, Copy, Check, Square, Menu } from 'lucide-react';
+import { Send, Bot, User, Copy, Check, Square, Menu, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -156,7 +156,7 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
   const [isLoading, setIsLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [currentChatId, setCurrentChatId] = useState<string | null>(chatId);
-  const { accessToken, handleAuthError } = useAuth();
+  const { accessToken, isGuest, handleAuthError } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Use refs for values needed in callbacks to avoid recreating callbacks
@@ -200,13 +200,14 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
         return '';
       });
     },
-    onError: (error: string) => {
-      console.error('WebSocket error:', error);
-      if (error === 'Authentication failed') {
+    onError: (error: string, errorCode?: string) => {
+      console.error('WebSocket error:', error, errorCode);
+      if (errorCode === 'unauthorized') {
         handleAuthErrorRef.current();
       }
       setStreamingContent((prev) => {
         if (prev) {
+          // Partial response was streaming — finalize it with a stopped note
           setMessages((msgs) => [
             ...msgs,
             {
@@ -215,6 +216,27 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
               sender: 'assistant' as const,
               content: prev + '\n\n*[Generation stopped]*',
               created_at: new Date().toISOString(),
+            },
+            {
+              id: `err-${Date.now()}`,
+              chat_id: currentChatIdRef.current || '',
+              sender: 'assistant' as const,
+              content: error,
+              created_at: new Date().toISOString(),
+              isError: true,
+            },
+          ]);
+        } else {
+          // No partial content — just show the error bubble
+          setMessages((msgs) => [
+            ...msgs,
+            {
+              id: `err-${Date.now()}`,
+              chat_id: currentChatIdRef.current || '',
+              sender: 'assistant' as const,
+              content: error,
+              created_at: new Date().toISOString(),
+              isError: true,
             },
           ]);
         }
@@ -239,7 +261,7 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
   }, [chatId]);
 
   const loadMessages = useCallback(async () => {
-    if (!accessToken || !chatId) return;
+    if (!accessToken || !chatId || isGuest) return;
 
     try {
       setIsLoading(true);
@@ -254,7 +276,7 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken, chatId, handleAuthError]);
+  }, [accessToken, chatId, isGuest, handleAuthError]);
 
   useEffect(() => {
     if (chatId) {
@@ -276,7 +298,7 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!accessToken || !inputMessage.trim() || isGenerating) return;
+    if ((!accessToken && !isGuest) || !inputMessage.trim() || isGenerating) return;
 
     const messageContent = inputMessage.trim();
     setInputMessage('');
@@ -323,7 +345,12 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
                 <MessageSquare className="w-12 h-12 text-gray-600" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">Welcome to ChatIITD</h2>
-              <p className="text-gray-400">Start a new conversation by typing a message below</p>
+              <p className="text-gray-400">
+                {isGuest 
+                  ? 'Ask any question about IIT Delhi academics. Sign in for personalized answers.'
+                  : 'Start a new conversation by typing a message below'
+                }
+              </p>
             </div>
           </div>
         ) : isLoading ? (
@@ -346,19 +373,32 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
                 className={`flex gap-3 sm:gap-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {message.sender === 'assistant' && (
-                  <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
-                    <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg ${
+                    message.isError
+                      ? 'bg-red-900/60'
+                      : 'bg-gradient-to-br from-blue-600 to-blue-700'
+                  }`}>
+                    {message.isError
+                      ? <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
+                      : <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    }
                   </div>
                 )}
                 <div
                   className={`group relative max-w-[85%] sm:max-w-2xl px-3 py-2 sm:px-4 sm:py-3 rounded-2xl transition-all duration-200 ${
-                    message.sender === 'user' 
-                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg' 
-                      : 'bg-gray-800 text-gray-100 shadow-md'
+                    message.isError
+                      ? 'bg-red-950/60 border border-red-800/60 text-red-300 shadow-md'
+                      : message.sender === 'user'
+                        ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg'
+                        : 'bg-gray-800 text-gray-100 shadow-md'
                   }`}
                 >
-                  <MarkdownContent content={message.content} />
-                  {message.sender === 'assistant' && (
+                  {message.isError ? (
+                    <p className="text-sm">{message.content}</p>
+                  ) : (
+                    <MarkdownContent content={message.content} />
+                  )}
+                  {message.sender === 'assistant' && !message.isError && (
                     <div className="absolute -bottom-6 left-0">
                       <CopyButton content={message.content} />
                     </div>
