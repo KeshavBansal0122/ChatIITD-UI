@@ -32,7 +32,7 @@ export function ChatPage() {
   };
 
   return (
-    <div className="h-screen flex overflow-hidden bg-gray-950">
+    <div className="h-screen flex overflow-hidden bg-white">
       <ChatSidebar
         selectedChatId={selectedChatId}
         onSelectChat={setSelectedChatId}

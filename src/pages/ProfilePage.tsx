@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService, UserProfile, AuthError, CourseSearchResult } from '../services/api';
-import { 
-  ArrowLeft, 
-  ExternalLink, 
-  LogOut, 
-  Loader2, 
-  ChevronDown, 
+import {
+  ArrowLeft,
+  ExternalLink,
+  LogOut,
+  Loader2,
+  ChevronDown,
   ChevronRight,
   Plus,
   X,
@@ -20,7 +20,7 @@ import {
 export function ProfilePage() {
   const navigate = useNavigate();
   const { accessToken, logout, handleAuthError } = useAuth();
-  
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [courses, setCourses] = useState<Record<string, string[]>>({});
   const [originalCourses, setOriginalCourses] = useState<Record<string, string[]>>({});
@@ -30,11 +30,9 @@ export function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [invalidCourses, setInvalidCourses] = useState<string[]>([]);
-  
-  // Semester accordion state
+
   const [expandedSemesters, setExpandedSemesters] = useState<Set<number>>(new Set([1]));
-  
-  // Course search state
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<CourseSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -44,16 +42,16 @@ export function ProfilePage() {
 
   const loadProfile = useCallback(async () => {
     if (!accessToken) return;
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const [profileData, coursesData] = await Promise.all([
         apiService.getUserProfile(accessToken),
         apiService.getUserCourses(accessToken),
       ]);
-      
+
       setProfile(profileData);
       setCourses(coursesData.courses);
       setOriginalCourses(coursesData.courses);
@@ -75,11 +73,11 @@ export function ProfilePage() {
 
   const handleLoadDefaults = async () => {
     if (!accessToken) return;
-    
+
     try {
       setIsLoadingDefaults(true);
       setError(null);
-      
+
       const defaults = await apiService.getDefaultCourses(accessToken);
       setCourses(defaults.courses);
       setSuccessMessage(`Loaded recommended courses for semesters 1-${defaults.current_semester - 1}`);
@@ -98,16 +96,16 @@ export function ProfilePage() {
 
   const handleSave = async () => {
     if (!accessToken) return;
-    
+
     try {
       setIsSaving(true);
       setError(null);
       setInvalidCourses([]);
-      
+
       const result = await apiService.updateUserCourses(accessToken, courses);
       setCourses(result.courses);
       setOriginalCourses(result.courses);
-      
+
       if (result.validation.invalid.length > 0) {
         setInvalidCourses(result.validation.invalid);
         setError(`Some courses were not found: ${result.validation.invalid.join(', ')}`);
@@ -129,14 +127,14 @@ export function ProfilePage() {
 
   const handleSearchCourses = async (query: string) => {
     setSearchQuery(query);
-    
+
     if (query.length < 2) {
       setSearchResults([]);
       return;
     }
-    
+
     if (!accessToken) return;
-    
+
     try {
       setIsSearching(true);
       const result = await apiService.searchCourses(accessToken, query);
@@ -152,14 +150,14 @@ export function ProfilePage() {
   const addCourse = (semester: number, courseCode: string) => {
     const semKey = String(semester);
     const currentCourses = courses[semKey] || [];
-    
+
     if (!currentCourses.includes(courseCode.toUpperCase())) {
       setCourses({
         ...courses,
         [semKey]: [...currentCourses, courseCode.toUpperCase()],
       });
     }
-    
+
     setSearchQuery('');
     setSearchResults([]);
     setAddingSemester(null);
@@ -168,7 +166,7 @@ export function ProfilePage() {
   const removeCourse = (semester: number, courseCode: string) => {
     const semKey = String(semester);
     const currentCourses = courses[semKey] || [];
-    
+
     setCourses({
       ...courses,
       [semKey]: currentCourses.filter(c => c !== courseCode),
@@ -187,8 +185,8 @@ export function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="w-7 h-7 text-gray-400 animate-spin" />
       </div>
     );
   }
@@ -196,23 +194,23 @@ export function ProfilePage() {
   const maxSemesters = profile?.max_semesters || 8;
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-gray-900 border-b border-gray-800 sticky top-0 z-10">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/')}
-              className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition"
+              className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-xl font-bold text-white">Profile</h1>
+            <h1 className="text-xl font-bold text-gray-900 font-montserrat tracking-tight">Profile</h1>
           </div>
-          
+
           <button
             onClick={logout}
-            className="flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition"
+            className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 text-sm"
           >
             <LogOut className="w-4 h-4" />
             Logout
@@ -220,37 +218,37 @@ export function ProfilePage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         {/* Error/Success Messages */}
         {error && (
-          <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-3 rounded-lg flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl flex items-center gap-2 text-sm">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
             {error}
           </div>
         )}
-        
+
         {successMessage && (
-          <div className="bg-green-900/20 border border-green-800 text-green-400 px-4 py-3 rounded-lg flex items-center gap-2">
-            <Check className="w-5 h-5 flex-shrink-0" />
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl flex items-center gap-2 text-sm">
+            <Check className="w-4 h-4 flex-shrink-0" />
             {successMessage}
           </div>
         )}
 
         {/* Profile Info Card */}
-        <section className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">Personal Information</h2>
+        <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-gray-900 font-montserrat">Personal Information</h2>
             <a
               href="https://auth.devclub.in/profile"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition"
+              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors duration-200"
             >
               Edit on DevClub
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
-          
+
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <ProfileField label="Name" value={profile?.name} />
             <ProfileField label="Email" value={profile?.email} />
@@ -264,20 +262,20 @@ export function ProfilePage() {
         </section>
 
         {/* Courses Section */}
-        <section className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <section className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-white">Courses Completed</h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <h2 className="text-base font-semibold text-gray-900 font-montserrat">Courses Completed</h2>
+              <p className="text-sm text-gray-500 mt-0.5">
                 Track the courses you've completed each semester
               </p>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <button
                 onClick={handleLoadDefaults}
                 disabled={isLoadingDefaults}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-white hover:bg-gray-50 text-gray-600 rounded-lg transition-colors duration-200 disabled:opacity-50 border border-gray-200"
               >
                 {isLoadingDefaults ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -286,11 +284,11 @@ export function ProfilePage() {
                 )}
                 Load Defaults
               </button>
-              
+
               <button
                 onClick={handleSave}
                 disabled={!hasChanges || isSaving}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-900 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -301,8 +299,8 @@ export function ProfilePage() {
               </button>
             </div>
           </div>
-          
-          <div className="divide-y divide-gray-800">
+
+          <div className="divide-y divide-gray-100">
             {Array.from({ length: maxSemesters }, (_, i) => i + 1).map(semester => (
               <SemesterSection
                 key={semester}
@@ -336,8 +334,8 @@ export function ProfilePage() {
 function ProfileField({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div>
-      <dt className="text-sm text-gray-400">{label}</dt>
-      <dd className="text-white mt-1">{value || '-'}</dd>
+      <dt className="text-xs font-medium text-gray-400 uppercase tracking-wide">{label}</dt>
+      <dd className="text-gray-900 mt-1 text-sm">{value || '—'}</dd>
     </div>
   );
 }
@@ -379,49 +377,49 @@ function SemesterSection({
     <div>
       <button
         onClick={onToggle}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-800/50 transition"
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors duration-200"
       >
         <div className="flex items-center gap-3">
           {isExpanded ? (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-gray-400" />
           ) : (
-            <ChevronRight className="w-5 h-5 text-gray-400" />
+            <ChevronRight className="w-4 h-4 text-gray-400" />
           )}
-          <span className="font-medium text-white">Semester {semester}</span>
-          <span className="text-sm text-gray-500">
+          <span className="font-medium text-gray-900 text-sm">Semester {semester}</span>
+          <span className="text-xs text-gray-400">
             ({courses.length} course{courses.length !== 1 ? 's' : ''})
           </span>
         </div>
       </button>
-      
+
       {isExpanded && (
-        <div className="px-6 pb-4 pl-14">
+        <div className="px-6 pb-5 pl-14">
           {/* Course chips */}
           <div className="flex flex-wrap gap-2 mb-3">
             {courses.map(code => (
               <div
                 key={code}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm ${
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${
                   invalidCourses.includes(code)
-                    ? 'bg-red-900/30 text-red-400 border border-red-800'
-                    : 'bg-gray-800 text-gray-300'
+                    ? 'bg-red-50 text-red-600 border border-red-200'
+                    : 'bg-gray-100 text-gray-700'
                 }`}
               >
                 {code}
                 <button
                   onClick={() => onRemoveCourse(code)}
-                  className="ml-1 p-0.5 hover:bg-gray-700 rounded-full transition"
+                  className="ml-1 p-0.5 hover:bg-gray-200 rounded-full transition-colors duration-150"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </div>
             ))}
-            
+
             {courses.length === 0 && !isAddingMode && (
-              <span className="text-sm text-gray-500 italic">No courses added</span>
+              <span className="text-sm text-gray-400 italic">No courses added</span>
             )}
           </div>
-          
+
           {/* Add course */}
           {isAddingMode ? (
             <div className="relative">
@@ -431,22 +429,22 @@ function SemesterSection({
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder="Type course code (e.g., COL100)"
-                  className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                  className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-sm transition-all duration-200"
                   autoFocus
                 />
                 <button
                   onClick={onCancelAdding}
-                  className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition"
+                  className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
-              
+
               {/* Search results dropdown */}
               {(searchResults.length > 0 || isSearching) && (
-                <div className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-sm max-h-48 overflow-y-auto">
                   {isSearching ? (
-                    <div className="px-3 py-2 text-gray-400 flex items-center gap-2">
+                    <div className="px-3 py-3 text-gray-400 flex items-center gap-2 text-sm">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Searching...
                     </div>
@@ -455,21 +453,21 @@ function SemesterSection({
                       <button
                         key={course.code}
                         onClick={() => onAddCourse(course.code)}
-                        className="w-full px-3 py-2 text-left hover:bg-gray-700 transition"
+                        className="w-full px-3 py-2.5 text-left hover:bg-gray-50 transition-colors duration-150 first:rounded-t-xl last:rounded-b-xl"
                       >
-                        <span className="text-white font-medium">{course.code}</span>
-                        <span className="text-gray-400 ml-2 text-sm">{course.name}</span>
+                        <span className="text-gray-900 font-medium text-sm">{course.code}</span>
+                        <span className="text-gray-500 ml-2 text-sm">{course.name}</span>
                       </button>
                     ))
                   )}
                 </div>
               )}
-              
+
               {/* Direct add option */}
               {searchQuery.length >= 2 && !searchResults.find(c => c.code === searchQuery.toUpperCase()) && (
                 <button
                   onClick={() => onAddCourse(searchQuery)}
-                  className="mt-2 text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  className="mt-2 text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1 transition-colors duration-200"
                 >
                   <Plus className="w-4 h-4" />
                   Add "{searchQuery.toUpperCase()}" anyway
@@ -479,7 +477,7 @@ function SemesterSection({
           ) : (
             <button
               onClick={onStartAdding}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 rounded-lg transition"
+              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
             >
               <Plus className="w-4 h-4" />
               Add Course

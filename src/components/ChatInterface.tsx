@@ -14,19 +14,17 @@ interface ChatInterfaceProps {
 
 // Format tool status message for display
 function formatToolStatus(toolRaw: string): string {
-  // toolRaw format: "tool_name" or "tool_name(arg1=val1, arg2=val2)"
   const match = toolRaw.match(/^(\w+)(?:\((.+)\))?$/);
   if (!match) return toolRaw;
-  
+
   const toolName = match[1];
   const argsStr = match[2] || '';
-  
+
   switch (toolName) {
     case 'query_sqlite_db':
       return 'Digging up courses data...';
-    
+
     case 'get_course_data': {
-      // Extract course codes from args like "course_codes=['COL106', 'MTL108']"
       const codesMatch = argsStr.match(/course_codes=\[([^\]]+)\]/);
       if (codesMatch) {
         const codes = codesMatch[1].replace(/['"]/g, '').split(',').map(s => s.trim()).join(', ');
@@ -34,23 +32,22 @@ function formatToolStatus(toolRaw: string): string {
       }
       return 'Checking out courses...';
     }
-    
+
     case 'get_programme_structure': {
-      // Extract programme code from args like "programme_code=ME2"
       const progMatch = argsStr.match(/programme_code=(\w+)/);
       if (progMatch) {
         return `Checking the programme structure for ${progMatch[1]}...`;
       }
       return 'Checking the programme structure...';
     }
-    
+
     case 'get_rules_section':
     case 'search_rules':
       return 'Checking the institute rules...';
-    
+
     case 'search_courses':
       return 'Searching in Courses of Study...';
-    
+
     default:
       return `using ${toolRaw}`;
   }
@@ -60,18 +57,17 @@ function formatToolStatus(toolRaw: string): string {
 function StatusIndicator({ status, toolName }: { status: ChatStatus; toolName: string | null }) {
   if (status === 'idle' || status === 'error') return null;
 
-  // Determine what to show - if we have a tool name, show it even during thinking
   const showTool = toolName && (status === 'tool_call' || status === 'thinking');
   const displayText = showTool ? formatToolStatus(toolName) : null;
-  
+
   return (
-    <div className="flex items-center gap-2 text-sm text-gray-400 animate-pulse">
+    <div className="flex items-center gap-2 text-sm text-gray-400">
       <div className="flex gap-1">
         <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
         <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
         <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
       </div>
-      <span className="font-mono">
+      <span className="font-mono text-xs">
         {status === 'connecting' && 'connecting...'}
         {displayText}
         {status === 'thinking' && !toolName && 'thinking...'}
@@ -97,13 +93,13 @@ function CopyButton({ content }: { content: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-700 rounded"
+      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded-lg"
       title="Copy as markdown"
     >
       {copied ? (
-        <Check className="w-4 h-4 text-green-400" />
+        <Check className="w-4 h-4 text-gray-500" />
       ) : (
-        <Copy className="w-4 h-4 text-gray-400 hover:text-white" />
+        <Copy className="w-4 h-4 text-gray-400 hover:text-gray-700" />
       )}
     </button>
   );
@@ -112,7 +108,7 @@ function CopyButton({ content }: { content: string }) {
 // Markdown renderer component
 function MarkdownContent({ content }: { content: string }) {
   return (
-    <div className="prose prose-invert max-w-none">
+    <div className="max-w-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -123,24 +119,24 @@ function MarkdownContent({ content }: { content: string }) {
           code: ({ children, className }) => {
             const isInline = !className;
             return isInline ? (
-              <code className="bg-gray-900 px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>
+              <code className="px-1.5 py-0.5 rounded text-sm font-mono bg-black/10">{children}</code>
             ) : (
-              <code className="block bg-gray-900 p-3 rounded-lg text-sm font-mono overflow-x-auto mb-2">{children}</code>
+              <code className="block p-3 rounded-xl text-sm font-mono overflow-x-auto mb-2 bg-black/10">{children}</code>
             );
           },
           pre: ({ children }) => <div className="mb-2">{children}</div>,
-          h1: ({ children }) => <h1 className="text-2xl font-bold mb-2">{children}</h1>,
-          h2: ({ children }) => <h2 className="text-xl font-bold mb-2">{children}</h2>,
-          h3: ({ children }) => <h3 className="text-lg font-bold mb-2">{children}</h3>,
-          strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+          h1: ({ children }) => <h1 className="text-2xl font-bold mb-2 font-montserrat">{children}</h1>,
+          h2: ({ children }) => <h2 className="text-xl font-bold mb-2 font-montserrat">{children}</h2>,
+          h3: ({ children }) => <h3 className="text-lg font-bold mb-2 font-montserrat">{children}</h3>,
+          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
           em: ({ children }) => <em className="italic">{children}</em>,
           a: ({ children, href }) => (
-            <a href={href} className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">
+            <a href={href} className="underline underline-offset-2 text-gray-600 hover:text-gray-900" target="_blank" rel="noopener noreferrer">
               {children}
             </a>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-gray-600 pl-4 italic mb-2">{children}</blockquote>
+            <blockquote className="border-l-4 border-black/20 pl-4 italic mb-2 opacity-80">{children}</blockquote>
           ),
         }}
       >
@@ -148,6 +144,22 @@ function MarkdownContent({ content }: { content: string }) {
       </ReactMarkdown>
     </div>
   );
+}
+
+const ALL_EXAMPLE_PROMPTS = [
+  'What courses should I take in the next semester?',
+  'How does the CGPA and SGPA grading system work?',
+  'What are the prerequisites for COL334 (Computer Networks)?',
+  'How many credits do I need to graduate from the B.Tech programme?',
+  'What elective options are available for 5th semester CSE students?',
+  'What are the rules for auditing a course?',
+  'Can you explain the Minor programme options at IIT Delhi?',
+  'How can I get a minor degree in economics?',
+];
+
+function pickRandom4(arr: string[]): string[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, 4);
 }
 
 export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatInterfaceProps) {
@@ -158,26 +170,16 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
   const [currentChatId, setCurrentChatId] = useState<string | null>(chatId);
   const { accessToken, isGuest, handleAuthError } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // Use refs for values needed in callbacks to avoid recreating callbacks
+  const [examplePrompts] = useState(() => pickRandom4(ALL_EXAMPLE_PROMPTS));
+
   const currentChatIdRef = useRef(currentChatId);
   const onChatCreatedRef = useRef(onChatCreated);
   const handleAuthErrorRef = useRef(handleAuthError);
-  
-  // Keep refs updated
-  useEffect(() => {
-    currentChatIdRef.current = currentChatId;
-  }, [currentChatId]);
-  
-  useEffect(() => {
-    onChatCreatedRef.current = onChatCreated;
-  }, [onChatCreated]);
-  
-  useEffect(() => {
-    handleAuthErrorRef.current = handleAuthError;
-  }, [handleAuthError]);
 
-  // Memoize callbacks to prevent hook from re-initializing
+  useEffect(() => { currentChatIdRef.current = currentChatId; }, [currentChatId]);
+  useEffect(() => { onChatCreatedRef.current = onChatCreated; }, [onChatCreated]);
+  useEffect(() => { handleAuthErrorRef.current = handleAuthError; }, [handleAuthError]);
+
   const wsCallbacks = useMemo(() => ({
     onToken: (token: string) => {
       setStreamingContent((prev) => prev + token);
@@ -207,7 +209,6 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
       }
       setStreamingContent((prev) => {
         if (prev) {
-          // Partial response was streaming — finalize it with a stopped note
           setMessages((msgs) => [
             ...msgs,
             {
@@ -227,7 +228,6 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
             },
           ]);
         } else {
-          // No partial content — just show the error bubble
           setMessages((msgs) => [
             ...msgs,
             {
@@ -247,15 +247,13 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
       setCurrentChatId(chat.id);
       onChatCreatedRef.current(chat.id);
     },
-  }), []); // Empty deps - callbacks use refs for changing values
+  }), []);
 
-  // WebSocket hook
   const { sendMessage: wsSendMessage, stopGeneration, status, currentTool } = useChatWebSocket(
     accessToken,
     wsCallbacks
   );
 
-  // Sync chatId prop with local state
   useEffect(() => {
     setCurrentChatId(chatId);
   }, [chatId]);
@@ -296,15 +294,10 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
 
   const isGenerating = status !== 'idle' && status !== 'error';
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if ((!accessToken && !isGuest) || !inputMessage.trim() || isGenerating) return;
-
-    const messageContent = inputMessage.trim();
+  const sendContent = (messageContent: string) => {
+    if ((!accessToken && !isGuest) || !messageContent.trim() || isGenerating) return;
     setInputMessage('');
     setStreamingContent('');
-
-    // Add user message to UI immediately
     const userMessage: Message = {
       id: `temp-${Date.now()}`,
       chat_id: currentChatId || '',
@@ -313,9 +306,14 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
       created_at: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, userMessage]);
+    // Guests always use /ws/chat/new — the backend's existing-chat endpoint
+    // only accepts integer IDs and has no persistent guest session support.
+    wsSendMessage(messageContent, isGuest ? undefined : (currentChatId || undefined));
+  };
 
-    // Send via WebSocket
-    wsSendMessage(messageContent, currentChatId || undefined);
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendContent(inputMessage.trim());
   };
 
   const handleStopGeneration = () => {
@@ -323,74 +321,86 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-950 h-full">
-      {/* Mobile header with menu button */}
+    <div className="flex-1 flex flex-col bg-white h-full">
+      {/* Mobile header */}
       {onOpenMobileMenu && (
-        <div className="md:hidden bg-gray-900 border-b border-gray-800 px-4 py-3 flex items-center gap-3">
+        <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
           <button
             onClick={onOpenMobileMenu}
-            className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all duration-200"
+            className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
           >
             <Menu className="w-5 h-5" />
           </button>
-          <h1 className="text-lg font-semibold text-white">ChatIITD</h1>
+          <h1 className="text-lg font-bold text-gray-900 font-montserrat tracking-tight">ChatIITD</h1>
         </div>
       )}
-      
+
       <div className="flex-1 overflow-y-auto p-4">
         {!chatId && messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center px-4">
-              <div className="bg-gray-900 p-6 rounded-full mb-4 inline-block">
-                <MessageSquare className="w-12 h-12 text-gray-600" />
+          <div className="flex flex-col items-center justify-center h-full gap-8 px-4">
+            <div className="text-center">
+              <div className="bg-gray-100 p-5 rounded-full mb-5 inline-block">
+                <MessageSquare className="w-9 h-9 text-gray-400" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Welcome to ChatIITD</h2>
-              <p className="text-gray-400">
-                {isGuest 
-                  ? 'Ask any question about IIT Delhi academics. Sign in for personalized answers.'
-                  : 'Start a new conversation by typing a message below'
+              <h2 className="text-2xl font-bold text-gray-900 mb-2 font-montserrat tracking-tight">Welcome to ChatIITD</h2>
+              <p className="text-gray-500 text-sm max-w-xs">
+                {isGuest
+                  ? 'Ask anything about IIT Delhi academics. Sign in for personalized answers.'
+                  : 'Your AI assistant for IITD academics. Try one of these to get started.'
                 }
               </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
+              {examplePrompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  onClick={() => sendContent(prompt)}
+                  className="text-left px-4 py-3.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors duration-200 group"
+                >
+                  <p className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors duration-200 leading-snug">{prompt}</p>
+                </button>
+              ))}
             </div>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="flex gap-1">
-              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div className="flex gap-1.5">
+              <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
           </div>
         ) : messages.length === 0 && !streamingContent && !isGenerating ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500">No messages yet. Start the conversation!</p>
+            <p className="text-gray-400 text-sm">No messages yet. Start the conversation!</p>
           </div>
         ) : (
-          <div className="max-w-4xl mx-auto space-y-6">
+          <div className="max-w-3xl mx-auto space-y-5">
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex gap-3 sm:gap-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {message.sender === 'assistant' && (
-                  <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-lg ${
+                  <div className={`flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${
                     message.isError
-                      ? 'bg-red-900/60'
-                      : 'bg-gradient-to-br from-blue-600 to-blue-700'
+                      ? 'bg-red-100'
+                      : 'bg-gray-900'
                   }`}>
                     {message.isError
-                      ? <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
+                      ? <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
                       : <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     }
                   </div>
                 )}
                 <div
-                  className={`group relative max-w-[85%] sm:max-w-2xl px-3 py-2 sm:px-4 sm:py-3 rounded-2xl transition-all duration-200 ${
+                  className={`group relative max-w-[85%] sm:max-w-2xl px-4 py-3 rounded-2xl transition-all duration-200 ${
                     message.isError
-                      ? 'bg-red-950/60 border border-red-800/60 text-red-300 shadow-md'
+                      ? 'bg-red-50 border border-red-200 text-red-700'
                       : message.sender === 'user'
-                        ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg'
-                        : 'bg-gray-800 text-gray-100 shadow-md'
+                        ? 'bg-gray-200 text-gray-900'
+                        : 'bg-gray-100 text-gray-900'
                   }`}
                 >
                   {message.isError ? (
@@ -405,8 +415,8 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
                   )}
                 </div>
                 {message.sender === 'user' && (
-                  <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-700 flex items-center justify-center shadow-lg">
-                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-300 flex items-center justify-center">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                   </div>
                 )}
               </div>
@@ -415,10 +425,10 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
             {/* Status indicator when processing */}
             {isGenerating && !streamingContent && (
               <div className="flex gap-3 sm:gap-4 justify-start">
-                <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
+                <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-900 flex items-center justify-center">
                   <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <div className="px-3 py-2 sm:px-4 sm:py-3 rounded-2xl bg-gray-800 shadow-md">
+                <div className="px-4 py-3 rounded-2xl bg-gray-100">
                   <StatusIndicator status={status} toolName={currentTool} />
                 </div>
               </div>
@@ -427,14 +437,13 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
             {/* Streaming message */}
             {streamingContent && (
               <div className="flex gap-3 sm:gap-4 justify-start">
-                <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
+                <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-900 flex items-center justify-center">
                   <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <div className="group relative max-w-[85%] sm:max-w-2xl px-3 py-2 sm:px-4 sm:py-3 rounded-2xl bg-gray-800 text-gray-100 shadow-md">
+                <div className="group relative max-w-[85%] sm:max-w-2xl px-4 py-3 rounded-2xl bg-gray-100 text-gray-900">
                   <MarkdownContent content={streamingContent} />
-                  {/* Show thinking status below streaming content if still processing tools */}
                   {(status === 'thinking' || status === 'tool_call') && (
-                    <div className="mt-2 pt-2 border-t border-gray-700">
+                    <div className="mt-2 pt-2 border-t border-gray-200">
                       <StatusIndicator status={status} toolName={currentTool} />
                     </div>
                   )}
@@ -446,8 +455,8 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
         )}
       </div>
 
-      <div className="border-t border-gray-800 p-3 sm:p-4 bg-gray-900">
-        <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto">
+      <div className="border-t border-gray-200 p-3 sm:p-4 bg-white">
+        <form onSubmit={handleSendMessage} className="max-w-3xl mx-auto">
           <div className="flex gap-2 sm:gap-3">
             <input
               type="text"
@@ -455,24 +464,24 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type your message..."
               disabled={isGenerating}
-              className="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all duration-200 disabled:opacity-50 text-base"
+              className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-200 disabled:opacity-50 text-base"
             />
             {isGenerating ? (
               <button
                 type="button"
                 onClick={handleStopGeneration}
-                className="px-4 py-2 sm:px-6 sm:py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-red-500/50"
+                className="px-4 py-2 sm:px-5 sm:py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl transition-colors duration-200 flex items-center gap-2"
                 title="Stop generation"
               >
-                <Square className="w-5 h-5 fill-current" />
+                <Square className="w-4 h-4 fill-current" />
               </button>
             ) : (
               <button
                 type="submit"
                 disabled={!inputMessage.trim()}
-                className="px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-blue-500/50"
+                className="px-4 py-2 sm:px-5 sm:py-3 bg-gray-900 hover:bg-gray-700 text-white rounded-xl transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                <Send className="w-5 h-5" />
+                <Send className="w-4 h-4" />
               </button>
             )}
           </div>

@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LogIn, MessageSquare, Loader2, UserRound } from 'lucide-react';
 
 export function Login() {
   const { login, loginAsGuest, error } = useAuth();
+  const navigate = useNavigate();
   const [localError, setLocalError] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
@@ -26,21 +28,21 @@ export function Login() {
   const displayError = localError ?? error ?? null;
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="bg-blue-600 p-3 rounded-xl">
+          <div className="flex items-center justify-center mb-5">
+            <div className="bg-gray-900 p-3 rounded-2xl">
               <MessageSquare className="w-8 h-8 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">ChatIITD</h1>
-          <p className="text-gray-400">Your AI-powered academic assistant for IIT Delhi</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2 font-montserrat tracking-tight">ChatIITD</h1>
+          <p className="text-gray-500">Your AI-powered academic assistant for IIT Delhi</p>
         </div>
 
-        <div className="bg-gray-900 rounded-2xl shadow-xl p-8 border border-gray-800">
+        <div className="bg-white rounded-2xl p-8 border border-gray-200">
           {displayError && (
-            <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-3 rounded-lg text-sm mb-6">
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm mb-6">
               {displayError}
             </div>
           )}
@@ -50,7 +52,7 @@ export function Login() {
               type="button"
               onClick={handleLogin}
               disabled={isRedirecting}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed text-white rounded-lg transition font-medium"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl transition-colors duration-200 font-medium"
             >
               {isRedirecting ? (
                 <>
@@ -67,26 +69,26 @@ export function Login() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-700" />
+                <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-900 text-gray-500">or</span>
+                <span className="px-3 bg-white text-gray-400">or</span>
               </div>
             </div>
 
             <button
               type="button"
-              onClick={loginAsGuest}
               disabled={isRedirecting}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-800 hover:bg-gray-700 disabled:opacity-70 disabled:cursor-not-allowed text-gray-300 rounded-lg transition font-medium border border-gray-700"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed text-gray-700 rounded-xl transition-colors duration-200 font-medium border border-gray-200"
+              onClick={() => { loginAsGuest(); navigate('/'); }}
             >
               <UserRound className="w-5 h-5" />
               Continue as Guest
             </button>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-800">
-            <p className="text-sm text-gray-500 text-center">
+          <div className="mt-6 pt-6 border-t border-gray-100">
+            <p className="text-sm text-gray-400 text-center">
               Sign in for personalized recommendations and saved chat history.
               Guests can chat but conversations are not saved.
             </p>

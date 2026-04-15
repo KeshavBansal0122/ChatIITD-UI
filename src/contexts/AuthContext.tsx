@@ -238,8 +238,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   if (!clientId) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-        <div className="bg-red-900/20 border border-red-800 text-red-400 px-6 py-4 rounded-lg max-w-md">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-2xl max-w-md">
           <h2 className="font-bold mb-2">Configuration Error</h2>
           <p className="text-sm">DevClub Client ID is not configured. Please set VITE_DEVCLUB_CLIENT_ID in your environment variables.</p>
         </div>
@@ -249,8 +249,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   if (!redirectUri) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-        <div className="bg-red-900/20 border border-red-800 text-red-400 px-6 py-4 rounded-lg max-w-md">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-2xl max-w-md">
           <h2 className="font-bold mb-2">Configuration Error</h2>
           <p className="text-sm">
             Unable to determine the OAuth redirect URI. Please set VITE_FRONTEND_URL in your environment variables.
@@ -262,8 +262,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   if (!backendUrl) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-        <div className="bg-red-900/20 border border-red-800 text-red-400 px-6 py-4 rounded-lg max-w-md">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-2xl max-w-md">
           <h2 className="font-bold mb-2">Configuration Error</h2>
           <p className="text-sm">Backend URL is not configured. Please set VITE_BACKEND_URL to continue.</p>
         </div>

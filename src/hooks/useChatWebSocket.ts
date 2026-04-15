@@ -68,12 +68,6 @@ export function useChatWebSocket(
   }, []);
 
   const sendMessage = useCallback((content: string, chatId?: string) => {
-    // For existing chats, require auth; for new chats, allow guests
-    if (!accessToken && chatId) {
-      callbacksRef.current.onError('Not authenticated. Please sign in.', 'unauthorized');
-      return;
-    }
-
     // Clean up existing connection
     cleanup();
 

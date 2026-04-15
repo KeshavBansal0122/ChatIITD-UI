@@ -20,10 +20,10 @@ interface ChatSidebarProps {
   onMobileClose?: () => void;
 }
 
-export function ChatSidebar({ 
-  selectedChatId, 
-  onSelectChat, 
-  onNewChat, 
+export function ChatSidebar({
+  selectedChatId,
+  onSelectChat,
+  onNewChat,
   refreshTrigger,
   isCollapsed,
   onToggleCollapse,
@@ -78,8 +78,7 @@ export function ChatSidebar({
     try {
       await apiService.deleteChat(accessToken, chatId);
       setChats(chats.filter((chat) => chat.id !== chatId));
-      
-      // If the deleted chat was the selected one, go to home page
+
       if (selectedChatId === chatId) {
         onNewChat();
       }
@@ -97,61 +96,58 @@ export function ChatSidebar({
       {/* Mobile backdrop */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/20 z-40 md:hidden"
           onClick={onMobileClose}
         />
       )}
-      
+
       {/* Sidebar */}
       <div
         className={`
-          bg-gradient-to-b from-gray-900 to-gray-900/95 border-r border-gray-800 flex flex-col h-full
+          bg-gray-50 border-r border-gray-200 flex flex-col h-full
           transition-all duration-300 ease-in-out
-          ${isCollapsed ? 'w-20' : 'w-80'}
+          ${isCollapsed ? 'w-16' : 'w-72'}
           ${isMobileOpen ? 'fixed inset-y-0 left-0 z-50 md:relative' : 'hidden md:flex'}
         `}
       >
-        <div className="p-4 border-b border-gray-800">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-3 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 overflow-hidden">
-              {/* <div className="bg-gradient-to-br from-blue-600 to-blue-700 p-2 rounded-lg shadow-lg">
-                <MessageSquare className="w-5 h-5 text-white" />
-              </div> */}
               {!isCollapsed && (
-                <h1 className="text-xl font-bold text-white whitespace-nowrap">ChatIITD</h1>
+                <h1 className="text-lg font-bold text-gray-900 whitespace-nowrap font-montserrat tracking-tight">ChatIITD</h1>
               )}
             </div>
-            
+
             <div className="flex items-center gap-1">
               {!isCollapsed && !isGuest && (
                 <button
                   onClick={() => navigate('/profile')}
-                  className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all duration-200"
+                  className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors duration-200"
                   title="Profile"
                 >
-                  <User className="w-5 h-5" />
+                  <User className="w-4 h-4" />
                 </button>
               )}
-              
+
               <button
                 onClick={onToggleCollapse}
-                className="hidden md:block p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all duration-200"
+                className="hidden md:block p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors duration-200"
                 title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               >
                 {isCollapsed ? (
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4 h-4" />
                 ) : (
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-4 h-4" />
                 )}
               </button>
-              
+
               {isMobileOpen && (
                 <button
                   onClick={onMobileClose}
-                  className="md:hidden p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all duration-200"
+                  className="md:hidden p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors duration-200"
                   title="Close menu"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -160,26 +156,24 @@ export function ChatSidebar({
           <button
             onClick={handleNewChat}
             className={`
-              w-full flex items-center gap-2 px-4 py-3 
-              bg-gradient-to-r from-blue-600 to-blue-700 
-              hover:from-blue-700 hover:to-blue-800 
-              text-white rounded-lg transition-all duration-200 font-medium
-              shadow-lg hover:shadow-blue-500/50
+              w-full flex items-center gap-2 px-3 py-2.5
+              bg-gray-900 hover:bg-gray-700
+              text-white rounded-xl transition-colors duration-200 font-medium text-sm
               ${isCollapsed ? 'justify-center' : ''}
             `}
             title={isCollapsed ? 'New Chat' : undefined}
           >
-            <Plus className="w-5 h-5 flex-shrink-0" />
+            <Plus className="w-4 h-4 flex-shrink-0" />
             {!isCollapsed && 'New Chat'}
           </button>
-          
+
           {isCollapsed && !isGuest && (
             <button
               onClick={() => navigate('/profile')}
-              className="w-full mt-2 flex items-center justify-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all duration-200"
+              className="w-full mt-2 flex items-center justify-center px-3 py-2.5 text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-xl transition-colors duration-200"
               title="Profile"
             >
-              <User className="w-5 h-5" />
+              <User className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -187,14 +181,14 @@ export function ChatSidebar({
         <div className="flex-1 overflow-y-auto">
           {isGuest ? (
             !isCollapsed && (
-              <div className="p-4 space-y-4">
-                <div className="bg-blue-900/20 border border-blue-800/50 rounded-lg p-4">
-                  <p className="text-sm text-gray-300 mb-3">
-                    You're using guest mode. Sign in to save your chats and get personalized recommendations.
+              <div className="p-3 space-y-3">
+                <div className="bg-white border border-gray-200 rounded-xl p-4">
+                  <p className="text-sm text-gray-600 mb-3">
+                    You're in guest mode. Sign in to save chats and get personalized recommendations.
                   </p>
                   <Link
                     to="/login"
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition font-medium"
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-900 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors duration-200 font-medium"
                   >
                     <LogIn className="w-4 h-4" />
                     Sign in
@@ -204,38 +198,38 @@ export function ChatSidebar({
             )
           ) : isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 text-gray-500 animate-spin" />
+              <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
             </div>
           ) : chats.length === 0 ? (
             !isCollapsed && (
-              <div className="p-4 text-center text-gray-500 text-sm">
+              <div className="p-4 text-center text-gray-400 text-sm">
                 No chats yet. Create one to get started!
               </div>
             )
           ) : (
-            <div className="p-2 space-y-1">
+            <div className="p-2 space-y-0.5">
               {chats.map((chat) => (
                 <div
                   key={chat.id}
                   className={`
-                    w-full flex items-center justify-between px-4 py-3 rounded-lg 
-                    transition-all duration-200
+                    w-full flex items-center justify-between px-3 py-2.5 rounded-xl
+                    transition-colors duration-200
                     ${selectedChatId === chat.id
-                      ? 'bg-gray-800 text-white shadow-lg'
-                      : 'text-gray-300 hover:bg-gray-800/50'
+                      ? 'bg-gray-200 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }
                   `}
                 >
                   {/* Left: chat content */}
                   <div
-                    className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                    className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer"
                     onClick={() => handleSelectChat(chat.id)}
                   >
-                    <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                    <MessageSquare className="w-4 h-4 flex-shrink-0 text-gray-400" />
                     {!isCollapsed && (
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{chat.title || 'Untitled Chat'}</div>
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-sm font-medium truncate">{chat.title || 'Untitled Chat'}</div>
+                        <div className="text-xs text-gray-400 mt-0.5">
                           {new Date(chat.created_at).toLocaleDateString()}
                         </div>
                       </div>
@@ -245,8 +239,8 @@ export function ChatSidebar({
                   {/* Right: ellipsis menu */}
                   {!isCollapsed && (
                     <Menu as="div" className="relative inline-block text-left">
-                      <Menu.Button className="p-1 hover:bg-gray-700 rounded-full transition-all duration-200">
-                        <MoreVertical className="w-4 h-4 text-gray-400 hover:text-white" />
+                      <Menu.Button className="p-1 hover:bg-gray-300 rounded-lg transition-colors duration-200">
+                        <MoreVertical className="w-4 h-4 text-gray-400" />
                       </Menu.Button>
                       <Transition
                         as={Fragment}
@@ -257,14 +251,14 @@ export function ChatSidebar({
                         leaveFrom="transform opacity-100 scale-100"
                         leaveTo="transform opacity-0 scale-95"
                       >
-                        <Menu.Items className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-md shadow-lg focus:outline-none z-10">
+                        <Menu.Items className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none z-10">
                           <Menu.Item>
                             {({ active }) => (
                               <button
                                 onClick={() => handleDeleteChat(chat.id)}
                                 className={`${
-                                  active ? 'bg-red-600 text-white' : 'text-gray-300'
-                                } group flex w-full items-center px-4 py-2 text-sm transition-colors duration-150`}
+                                  active ? 'bg-red-50 text-red-600' : 'text-gray-600'
+                                } group flex w-full items-center px-4 py-2.5 text-sm transition-colors duration-150 rounded-xl`}
                               >
                                 Delete Chat
                               </button>
