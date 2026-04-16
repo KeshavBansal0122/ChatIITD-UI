@@ -150,7 +150,7 @@ const ALL_EXAMPLE_PROMPTS = [
   'What courses should I take in the next semester?',
   'How does the CGPA and SGPA grading system work?',
   'What are the prerequisites for COL334 (Computer Networks)?',
-  'How many credits do I need to graduate from the B.Tech programme?',
+  'How many credits do I need to graduate?',
   'What elective options are available for 5th semester CSE students?',
   'What are the rules for auditing a course?',
   'Can you explain the Minor programme options at IIT Delhi?',
