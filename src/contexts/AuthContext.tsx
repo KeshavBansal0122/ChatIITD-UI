@@ -231,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const clientId = import.meta.env.VITE_DEVCLUB_CLIENT_ID;
-  const oauthBaseUrl = import.meta.env.VITE_DEVCLUB_OAUTH_BASE_URL ?? 'https://oauth.devclub.in';
+  const oauthBaseUrl = import.meta.env.VITE_DEVCLUB_OAUTH_BASE_URL ?? 'https://auth.devclub.in';
   const frontendUrl = import.meta.env.VITE_FRONTEND_URL;
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const redirectUri = frontendUrl ? `${frontendUrl.replace(/\/+$/, '')}/callback` : undefined;
