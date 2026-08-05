@@ -25,15 +25,30 @@ React + TypeScript frontend for the IITD Chat Agent system with DevClub OAuth au
    npm run build
    ```
 
+## Docker Setup
+
+Requires the backend stack running at `http://localhost:8000` (see `backend/docker-compose.yml`).
+
+```bash
+cp .env.example .env   # set VITE_DEVCLUB_CLIENT_ID and URLs
+docker compose up --build
+```
+
+- SPA: `http://localhost:3000`
+- `VITE_*` values are **build args** — change them in `.env` / Compose and rebuild (`docker compose up --build`)
+
 ## Environment Variables
 
 ```bash
-# Backend API base URL
-VITE_API_BASE_URL=http://localhost:3000
+# Backend API URL (REQUIRED)
+VITE_BACKEND_URL=http://localhost:8000
 
-# DevClub OAuth
+# Frontend URL — used for OAuth redirect (REQUIRED)
+# Local Vite: http://localhost:5173  |  Docker: http://localhost:3000
+VITE_FRONTEND_URL=http://localhost:5173
+
+# DevClub OAuth (REQUIRED)
 VITE_DEVCLUB_CLIENT_ID=your_client_id_here
-VITE_DEVCLUB_REDIRECT_URI=http://localhost:5173/callback
 VITE_DEVCLUB_OAUTH_BASE_URL=https://oauth.devclub.in
 
 # Bypass authentication for demos/presentations
@@ -87,21 +102,21 @@ src/
 | `POST /chats/{id}/messages` | Send message |
 | `GET /chats/{id}/messages` | Get chat history |
 
-Requires backend running at `VITE_API_BASE_URL` with DevClub OAuth configured. See `backend/README.md`.
+Requires backend running at `VITE_BACKEND_URL` with DevClub OAuth configured. See `backend/README.md`.
 
 ## Production Deployment
 
-1. Build the app:
+1. Build the app (or use Docker Compose above):
    ```bash
    npm run build
    ```
 
-2. Update environment variables:
-   - `VITE_API_BASE_URL` → production backend URL
-   - `VITE_DEVCLUB_REDIRECT_URI` → production callback URL
+2. Update environment variables before build:
+   - `VITE_BACKEND_URL` → production backend URL
+   - `VITE_FRONTEND_URL` → production frontend origin (OAuth redirect base)
    - Ensure DevClub OAuth is registered for production URLs
 
-3. Deploy the `dist/` folder to your static hosting provider. Configure the host for SPA routing (all paths → `index.html`).
+3. Deploy the `dist/` folder to your static hosting provider. Configure the host for SPA routing (all paths → `index.html`). Docker Compose uses `nginx.conf` for this.
 
 ## Demo Mode
 

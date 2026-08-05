@@ -5,6 +5,19 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Vite embeds these at build time — must be present before `npm run build`
+ARG VITE_BACKEND_URL=http://localhost:8000
+ARG VITE_FRONTEND_URL=http://localhost:3000
+ARG VITE_DEVCLUB_CLIENT_ID=
+ARG VITE_DEVCLUB_OAUTH_BASE_URL=https://oauth.devclub.in
+ARG VITE_DEMO_MODE=false
+
+ENV VITE_BACKEND_URL=$VITE_BACKEND_URL \
+    VITE_FRONTEND_URL=$VITE_FRONTEND_URL \
+    VITE_DEVCLUB_CLIENT_ID=$VITE_DEVCLUB_CLIENT_ID \
+    VITE_DEVCLUB_OAUTH_BASE_URL=$VITE_DEVCLUB_OAUTH_BASE_URL \
+    VITE_DEMO_MODE=$VITE_DEMO_MODE
+
 # Install dependencies first (better layer caching)
 COPY package-lock.json package.json ./
 RUN npm ci
