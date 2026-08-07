@@ -77,6 +77,31 @@ export interface CourseSearchResponse {
   courses: CourseSearchResult[];
 }
 
+export interface UsageStatus {
+  used: number;
+  limit: number;
+  remaining: number;
+  window_hours: number;
+  resets_at: string | null;
+  byok: boolean;
+  providers: string[];
+}
+
+export interface LlmCredentialsPublic {
+  provider: string;
+  base_url: string;
+  model: string | null;
+  key_fingerprint: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface LlmCredentialsResponse {
+  connected: boolean;
+  credentials?: LlmCredentialsPublic | null;
+  deleted?: boolean;
+}
+
 class ApiService {
   private getHeaders(accessToken: string | null): Record<string, string> {
     const headers: Record<string, string> = {
@@ -363,6 +388,51 @@ class ApiService {
     }
 
     return response.json();
+  }
+
+  async getUsage(accessToken?: string | null): Promise<UsageStatus> {
+    const response = await fetch(`${API_BASE_URL}/user/usage`, {
+      headers: this.getHeaders(accessToken ?? null),
+      credentials: 'include',
+    });
+    if (response.status === 401) throw new AuthError();
+    if (!response.ok) throw new Error('Failed to fetch usage');
+    return response.json();
+  }
+
+  async getLlmCredentials(accessToken: string): Promise<LlmCredentialsResponse> {
+    const response = await fetch(`${API_BASE_URL}/user/llm-credentials`, {
+      headers: this.getHeaders(accessToken),
+    });
+    if (response.status === 401) throw new AuthError();
+    if (!response.ok) throw new Error('Failed to fetch LLM credentials');
+    return response.json();
+  }
+
+  async putLlmCredentials(
+    accessToken: string,
+    body: { provider: string; api_key: string; base_url?: string; model?: string }
+  ): Promise<LlmCredentialsResponse> {
+    const response = await fetch(`${API_BASE_URL}/user/llm-credentials`, {
+      method: 'PUT',
+      headers: this.getHeaders(accessToken),
+      body: JSON.stringify(body),
+    });
+    if (response.status === 401) throw new AuthError();
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { detail?: string }).detail || 'Failed to save LLM credentials');
+    }
+    return response.json();
+  }
+
+  async deleteLlmCredentials(accessToken: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/user/llm-credentials`, {
+      method: 'DELETE',
+      headers: this.getHeaders(accessToken),
+    });
+    if (response.status === 401) throw new AuthError();
+    if (!response.ok) throw new Error('Failed to delete LLM credentials');
   }
 }
 
