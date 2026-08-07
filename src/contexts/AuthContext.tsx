@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from 'react';
+import { ConfigError } from '../components/ui/LoadingScreen';
 
 interface AuthContextType {
   accessToken: string | null;
@@ -238,36 +239,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   if (!clientId) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-2xl max-w-md">
-          <h2 className="font-bold mb-2">Configuration Error</h2>
-          <p className="text-sm">DevClub Client ID is not configured. Please set VITE_DEVCLUB_CLIENT_ID in your environment variables.</p>
-        </div>
-      </div>
+      <ConfigError
+        title="Configuration Error"
+        message="DevClub Client ID is not configured. Please set VITE_DEVCLUB_CLIENT_ID in your environment variables."
+      />
     );
   }
 
   if (!redirectUri) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-2xl max-w-md">
-          <h2 className="font-bold mb-2">Configuration Error</h2>
-          <p className="text-sm">
-            Unable to determine the OAuth redirect URI. Please set VITE_FRONTEND_URL in your environment variables.
-          </p>
-        </div>
-      </div>
+      <ConfigError
+        title="Configuration Error"
+        message="Unable to determine the OAuth redirect URI. Please set VITE_FRONTEND_URL in your environment variables."
+      />
     );
   }
 
   if (!backendUrl) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-red-50 border border-red-200 text-red-600 px-6 py-4 rounded-2xl max-w-md">
-          <h2 className="font-bold mb-2">Configuration Error</h2>
-          <p className="text-sm">Backend URL is not configured. Please set VITE_BACKEND_URL to continue.</p>
-        </div>
-      </div>
+      <ConfigError
+        title="Configuration Error"
+        message="Backend URL is not configured. Please set VITE_BACKEND_URL to continue."
+      />
     );
   }
 

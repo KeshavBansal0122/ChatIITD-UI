@@ -1,17 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LoginPage, CallbackPage, ChatPage, ProfilePage } from './pages';
+import { LoadingScreen } from './components/ui/LoadingScreen';
 
 /** Allows authenticated users and guests (but not unauthenticated non-guests). */
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isGuest, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500 text-base">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!isAuthenticated && !isGuest) {
@@ -26,11 +23,7 @@ function AuthRequiredRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500 text-base">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!isAuthenticated) {

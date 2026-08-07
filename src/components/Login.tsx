@@ -28,21 +28,26 @@ export function Login() {
   const displayError = localError ?? error ?? null;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-5">
-            <div className="bg-gray-900 p-3 rounded-2xl">
-              <MessageSquare className="w-8 h-8 text-white" />
+    <div className="flex min-h-screen items-center justify-center bg-pplx-bg px-4">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <div className="mb-5 flex items-center justify-center">
+            <div className="rounded-2xl bg-iitd-red p-3 shadow-sm">
+              <MessageSquare className="h-8 w-8 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2 font-montserrat tracking-tight">ChatIITD</h1>
-          <p className="text-gray-500">Your AI-powered academic assistant for IIT Delhi</p>
+          <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-iitd-red">
+            IIT Delhi
+          </p>
+          <h1 className="mb-2 text-4xl font-semibold tracking-tight text-pplx-ink">
+            Chat<span className="text-iitd-red">IITD</span>
+          </h1>
+          <p className="text-pplx-muted">Your AI-powered academic assistant for IIT Delhi</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-8 border border-gray-200">
+        <div className="rounded-3xl border border-pplx-border bg-pplx-surface p-8 shadow-[0_2px_4px_-2px_rgba(32,24,18,0.06),0_8px_24px_-12px_rgba(32,24,18,0.12)]">
           {displayError && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm mb-6">
+            <div className="mb-6 rounded-xl border border-iitd-red/25 bg-iitd-red-soft/50 px-4 py-3 text-sm text-iitd-red-dark">
               {displayError}
             </div>
           )}
@@ -52,16 +57,16 @@ export function Login() {
               type="button"
               onClick={handleLogin}
               disabled={isRedirecting}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-xl transition-colors duration-200 font-medium"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-iitd-red px-4 py-3 font-medium text-white transition-colors duration-200 hover:bg-iitd-red-dark disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isRedirecting ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                   Redirecting...
                 </>
               ) : (
                 <>
-                  <LogIn className="w-5 h-5" />
+                  <LogIn className="h-5 w-5" />
                   Sign in with IITD Kerberos
                 </>
               )}
@@ -69,26 +74,29 @@ export function Login() {
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
+                <div className="w-full border-t border-pplx-border" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-white text-gray-400">or</span>
+                <span className="bg-pplx-surface px-3 text-pplx-muted">or</span>
               </div>
             </div>
 
             <button
               type="button"
               disabled={isRedirecting}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed text-gray-700 rounded-xl transition-colors duration-200 font-medium border border-gray-200"
-              onClick={() => { loginAsGuest(); navigate('/'); }}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-pplx-border bg-pplx-surface px-4 py-3 font-medium text-pplx-ink transition-colors duration-200 hover:border-iitd-red/35 hover:bg-iitd-red-soft/40 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => {
+                loginAsGuest();
+                navigate('/');
+              }}
             >
-              <UserRound className="w-5 h-5" />
+              <UserRound className="h-5 w-5" />
               Continue as Guest
             </button>
           </div>
 
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <p className="text-sm text-gray-400 text-center">
+          <div className="mt-6 border-t border-pplx-border pt-6">
+            <p className="text-center text-sm text-pplx-muted">
               Sign in for personalized recommendations and saved chat history.
               Guests can chat but conversations are not saved.
             </p>

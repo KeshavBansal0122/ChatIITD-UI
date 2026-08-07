@@ -61,11 +61,11 @@ function StatusIndicator({ status, toolName }: { status: ChatStatus; toolName: s
   const displayText = showTool ? formatToolStatus(toolName) : null;
 
   return (
-    <div className="flex items-center gap-2 text-sm text-gray-400">
+    <div className="flex items-center gap-2 text-sm text-pplx-muted">
       <div className="flex gap-1">
-        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+        <span className="w-1.5 h-1.5 bg-iitd-red rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+        <span className="w-1.5 h-1.5 bg-iitd-red rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+        <span className="w-1.5 h-1.5 bg-iitd-red rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
       </div>
       <span className="font-mono text-xs">
         {status === 'connecting' && 'connecting...'}
@@ -93,13 +93,13 @@ function CopyButton({ content }: { content: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-100 rounded-lg"
+      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-[#f1ece5] rounded-lg"
       title="Copy as markdown"
     >
       {copied ? (
-        <Check className="w-4 h-4 text-gray-500" />
+        <Check className="w-4 h-4 text-pplx-muted" />
       ) : (
-        <Copy className="w-4 h-4 text-gray-400 hover:text-gray-700" />
+        <Copy className="w-4 h-4 text-pplx-muted hover:text-pplx-ink" />
       )}
     </button>
   );
@@ -119,24 +119,24 @@ function MarkdownContent({ content }: { content: string }) {
           code: ({ children, className }) => {
             const isInline = !className;
             return isInline ? (
-              <code className="px-1.5 py-0.5 rounded text-sm font-mono bg-black/10">{children}</code>
+              <code className="px-1.5 py-0.5 rounded text-sm font-mono bg-black/5">{children}</code>
             ) : (
-              <code className="block p-3 rounded-xl text-sm font-mono overflow-x-auto mb-2 bg-black/10">{children}</code>
+              <code className="block p-3 rounded-xl text-sm font-mono overflow-x-auto mb-2 bg-[#f1ece5] border border-pplx-border">{children}</code>
             );
           },
           pre: ({ children }) => <div className="mb-2">{children}</div>,
-          h1: ({ children }) => <h1 className="text-2xl font-bold mb-2 font-montserrat">{children}</h1>,
-          h2: ({ children }) => <h2 className="text-xl font-bold mb-2 font-montserrat">{children}</h2>,
-          h3: ({ children }) => <h3 className="text-lg font-bold mb-2 font-montserrat">{children}</h3>,
+          h1: ({ children }) => <h1 className="text-2xl font-semibold tracking-tight mb-2">{children}</h1>,
+          h2: ({ children }) => <h2 className="text-xl font-semibold tracking-tight mb-2">{children}</h2>,
+          h3: ({ children }) => <h3 className="text-lg font-semibold tracking-tight mb-2">{children}</h3>,
           strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
           em: ({ children }) => <em className="italic">{children}</em>,
           a: ({ children, href }) => (
-            <a href={href} className="underline underline-offset-2 text-gray-600 hover:text-gray-900" target="_blank" rel="noopener noreferrer">
+            <a href={href} className="underline underline-offset-2 text-pplx-ink/80 hover:text-pplx-ink" target="_blank" rel="noopener noreferrer">
               {children}
             </a>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-black/20 pl-4 italic mb-2 opacity-80">{children}</blockquote>
+            <blockquote className="border-l-4 border-pplx-border pl-4 italic mb-2 text-pplx-muted">{children}</blockquote>
           ),
         }}
       >
@@ -321,17 +321,19 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-white h-full">
+    <div className="flex-1 flex flex-col bg-pplx-bg text-pplx-ink h-full">
       {/* Mobile header */}
       {onOpenMobileMenu && (
-        <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+        <div className="md:hidden bg-pplx-surface border-b border-pplx-border px-4 py-3 flex items-center gap-3">
           <button
             onClick={onOpenMobileMenu}
-            className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            className="p-2 text-pplx-muted hover:text-pplx-ink hover:bg-[#f1ece5] rounded-lg transition-colors duration-200"
           >
             <Menu className="w-5 h-5" />
           </button>
-          <h1 className="text-lg font-bold text-gray-900 font-montserrat tracking-tight">ChatIITD</h1>
+          <h1 className="text-lg font-semibold tracking-tight text-pplx-ink">
+            Chat<span className="text-iitd-red">IITD</span>
+          </h1>
         </div>
       )}
 
@@ -339,11 +341,14 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
         {!chatId && messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-8 px-4">
             <div className="text-center">
-              <div className="bg-gray-100 p-5 rounded-full mb-5 inline-block">
-                <MessageSquare className="w-9 h-9 text-gray-400" />
+              <div className="bg-iitd-red-soft/50 p-5 rounded-full mb-5 inline-block">
+                <MessageSquare className="w-9 h-9 text-iitd-red" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2 font-montserrat tracking-tight">Welcome to ChatIITD</h2>
-              <p className="text-gray-500 text-sm max-w-xs">
+              <p className="mb-2 text-xs font-medium uppercase tracking-[0.2em] text-iitd-red">
+                IIT Delhi
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-pplx-ink mb-2">Welcome to ChatIITD</h2>
+              <p className="text-pplx-muted text-sm max-w-xs">
                 {isGuest
                   ? 'Ask anything about IIT Delhi academics. Sign in for personalized answers.'
                   : 'Your AI assistant for IITD academics. Try one of these to get started.'
@@ -356,9 +361,9 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
                 <button
                   key={prompt}
                   onClick={() => sendContent(prompt)}
-                  className="text-left px-4 py-3.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors duration-200 group"
+                  className="text-left px-4 py-3.5 rounded-xl border border-pplx-border bg-pplx-surface hover:bg-iitd-red-soft/40 hover:border-iitd-red/35 transition-colors duration-200 group"
                 >
-                  <p className="text-sm text-gray-700 group-hover:text-gray-900 transition-colors duration-200 leading-snug">{prompt}</p>
+                  <p className="text-sm text-pplx-ink/80 group-hover:text-iitd-red-dark transition-colors duration-200 leading-snug">{prompt}</p>
                 </button>
               ))}
             </div>
@@ -366,14 +371,14 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
         ) : isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="flex gap-1.5">
-              <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-2 h-2 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <span className="w-2 h-2 bg-iitd-red rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-2 h-2 bg-iitd-red rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="w-2 h-2 bg-iitd-red rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
           </div>
         ) : messages.length === 0 && !streamingContent && !isGenerating ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-400 text-sm">No messages yet. Start the conversation!</p>
+            <p className="text-pplx-muted text-sm">No messages yet. Start the conversation!</p>
           </div>
         ) : (
           <div className="max-w-3xl mx-auto space-y-5">
@@ -385,11 +390,11 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
                 {message.sender === 'assistant' && (
                   <div className={`flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${
                     message.isError
-                      ? 'bg-red-100'
-                      : 'bg-gray-900'
+                      ? 'bg-iitd-red-soft'
+                      : 'bg-iitd-red'
                   }`}>
                     {message.isError
-                      ? <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+                      ? <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-iitd-red" />
                       : <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     }
                   </div>
@@ -397,10 +402,10 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
                 <div
                   className={`group relative max-w-[85%] sm:max-w-2xl px-4 py-3 rounded-2xl transition-all duration-200 ${
                     message.isError
-                      ? 'bg-red-50 border border-red-200 text-red-700'
+                      ? 'bg-iitd-red-soft/50 border border-iitd-red/25 text-iitd-red-dark'
                       : message.sender === 'user'
-                        ? 'bg-gray-200 text-gray-900'
-                        : 'bg-gray-100 text-gray-900'
+                        ? 'bg-[#ebe4da] text-pplx-ink'
+                        : 'bg-pplx-surface border border-pplx-border text-pplx-ink'
                   }`}
                 >
                   {message.isError ? (
@@ -415,8 +420,8 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
                   )}
                 </div>
                 {message.sender === 'user' && (
-                  <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-300 flex items-center justify-center">
-                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                  <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#ebe4da] border border-pplx-border flex items-center justify-center">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-pplx-muted" />
                   </div>
                 )}
               </div>
@@ -425,10 +430,10 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
             {/* Status indicator when processing */}
             {isGenerating && !streamingContent && (
               <div className="flex gap-3 sm:gap-4 justify-start">
-                <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-900 flex items-center justify-center">
+                <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-iitd-red flex items-center justify-center">
                   <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <div className="px-4 py-3 rounded-2xl bg-gray-100">
+                <div className="px-4 py-3 rounded-2xl bg-pplx-surface border border-pplx-border">
                   <StatusIndicator status={status} toolName={currentTool} />
                 </div>
               </div>
@@ -437,13 +442,13 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
             {/* Streaming message */}
             {streamingContent && (
               <div className="flex gap-3 sm:gap-4 justify-start">
-                <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-900 flex items-center justify-center">
+                <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-iitd-red flex items-center justify-center">
                   <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <div className="group relative max-w-[85%] sm:max-w-2xl px-4 py-3 rounded-2xl bg-gray-100 text-gray-900">
+                <div className="group relative max-w-[85%] sm:max-w-2xl px-4 py-3 rounded-2xl bg-pplx-surface border border-pplx-border text-pplx-ink">
                   <MarkdownContent content={streamingContent} />
                   {(status === 'thinking' || status === 'tool_call') && (
-                    <div className="mt-2 pt-2 border-t border-gray-200">
+                    <div className="mt-2 pt-2 border-t border-pplx-border">
                       <StatusIndicator status={status} toolName={currentTool} />
                     </div>
                   )}
@@ -455,7 +460,7 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
         )}
       </div>
 
-      <div className="border-t border-gray-200 p-3 sm:p-4 bg-white">
+      <div className="border-t border-pplx-border p-3 sm:p-4 bg-pplx-surface">
         <form onSubmit={handleSendMessage} className="max-w-3xl mx-auto">
           <div className="flex gap-2 sm:gap-3">
             <input
@@ -464,13 +469,13 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type your message..."
               disabled={isGenerating}
-              className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-200 disabled:opacity-50 text-base"
+              className="flex-1 px-4 py-3 bg-pplx-surface border border-pplx-border rounded-xl text-pplx-ink placeholder:text-pplx-muted focus:outline-none focus:ring-2 focus:ring-iitd-red/40 focus:border-iitd-red/45 transition-all duration-200 disabled:opacity-50 text-base"
             />
             {isGenerating ? (
               <button
                 type="button"
                 onClick={handleStopGeneration}
-                className="px-4 py-2 sm:px-5 sm:py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl transition-colors duration-200 flex items-center gap-2"
+                className="px-4 py-2 sm:px-5 sm:py-3 bg-[#ebe4da] hover:bg-[#e0d8cc] text-pplx-ink border border-pplx-border rounded-xl transition-colors duration-200 flex items-center gap-2"
                 title="Stop generation"
               >
                 <Square className="w-4 h-4 fill-current" />
@@ -479,7 +484,7 @@ export function ChatInterface({ chatId, onChatCreated, onOpenMobileMenu }: ChatI
               <button
                 type="submit"
                 disabled={!inputMessage.trim()}
-                className="px-4 py-2 sm:px-5 sm:py-3 bg-gray-900 hover:bg-gray-700 text-white rounded-xl transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 py-2 sm:px-5 sm:py-3 bg-iitd-red hover:bg-iitd-red-dark text-white rounded-xl transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <Send className="w-4 h-4" />
               </button>

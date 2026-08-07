@@ -1,19 +1,16 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Login } from '../components/Login';
+import { LoadingScreen } from '../components/ui/LoadingScreen';
 
 export function LoginPage() {
   const { isAuthenticated, isGuest, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500 text-base">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
-  if (isAuthenticated) {
+  if (isAuthenticated || isGuest) {
     return <Navigate to="/" replace />;
   }
 

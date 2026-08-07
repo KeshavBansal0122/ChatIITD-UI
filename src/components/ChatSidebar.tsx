@@ -104,17 +104,19 @@ export function ChatSidebar({
       {/* Sidebar */}
       <div
         className={`
-          bg-gray-50 border-r border-gray-200 flex flex-col h-full
+          bg-[#f1ece5] border-r border-pplx-border flex flex-col h-full text-pplx-ink
           transition-all duration-300 ease-in-out
           ${isCollapsed ? 'w-16' : 'w-72'}
           ${isMobileOpen ? 'fixed inset-y-0 left-0 z-50 md:relative' : 'hidden md:flex'}
         `}
       >
-        <div className="p-3 border-b border-gray-200">
+        <div className="p-3 border-b border-pplx-border">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 overflow-hidden">
               {!isCollapsed && (
-                <h1 className="text-lg font-bold text-gray-900 whitespace-nowrap font-montserrat tracking-tight">ChatIITD</h1>
+                <h1 className="text-lg font-semibold tracking-tight text-pplx-ink whitespace-nowrap">
+                  Chat<span className="text-iitd-red">IITD</span>
+                </h1>
               )}
             </div>
 
@@ -122,7 +124,7 @@ export function ChatSidebar({
               {!isCollapsed && !isGuest && (
                 <button
                   onClick={() => navigate('/profile')}
-                  className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                  className="p-2 text-pplx-muted hover:text-pplx-ink hover:bg-black/5 rounded-lg transition-colors duration-200"
                   title="Profile"
                 >
                   <User className="w-4 h-4" />
@@ -131,7 +133,7 @@ export function ChatSidebar({
 
               <button
                 onClick={onToggleCollapse}
-                className="hidden md:block p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                className="hidden md:block p-2 text-pplx-muted hover:text-pplx-ink hover:bg-black/5 rounded-lg transition-colors duration-200"
                 title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               >
                 {isCollapsed ? (
@@ -144,7 +146,7 @@ export function ChatSidebar({
               {isMobileOpen && (
                 <button
                   onClick={onMobileClose}
-                  className="md:hidden p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                  className="md:hidden p-2 text-pplx-muted hover:text-pplx-ink hover:bg-black/5 rounded-lg transition-colors duration-200"
                   title="Close menu"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -157,7 +159,7 @@ export function ChatSidebar({
             onClick={handleNewChat}
             className={`
               w-full flex items-center gap-2 px-3 py-2.5
-              bg-gray-900 hover:bg-gray-700
+              bg-iitd-red hover:bg-iitd-red-dark
               text-white rounded-xl transition-colors duration-200 font-medium text-sm
               ${isCollapsed ? 'justify-center' : ''}
             `}
@@ -170,7 +172,7 @@ export function ChatSidebar({
           {isCollapsed && !isGuest && (
             <button
               onClick={() => navigate('/profile')}
-              className="w-full mt-2 flex items-center justify-center px-3 py-2.5 text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-xl transition-colors duration-200"
+              className="w-full mt-2 flex items-center justify-center px-3 py-2.5 text-pplx-muted hover:text-pplx-ink hover:bg-black/5 rounded-xl transition-colors duration-200"
               title="Profile"
             >
               <User className="w-4 h-4" />
@@ -182,13 +184,13 @@ export function ChatSidebar({
           {isGuest ? (
             !isCollapsed && (
               <div className="p-3 space-y-3">
-                <div className="bg-white border border-gray-200 rounded-xl p-4">
-                  <p className="text-sm text-gray-600 mb-3">
+                <div className="bg-pplx-surface border border-pplx-border rounded-xl p-4">
+                  <p className="text-sm text-pplx-muted mb-3">
                     You're in guest mode. Sign in to save chats and get personalized recommendations.
                   </p>
                   <Link
                     to="/login"
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-900 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors duration-200 font-medium"
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-iitd-red hover:bg-iitd-red-dark text-white text-sm rounded-lg transition-colors duration-200 font-medium"
                   >
                     <LogIn className="w-4 h-4" />
                     Sign in
@@ -198,11 +200,11 @@ export function ChatSidebar({
             )
           ) : isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+              <Loader2 className="w-5 h-5 text-iitd-red animate-spin" />
             </div>
           ) : chats.length === 0 ? (
             !isCollapsed && (
-              <div className="p-4 text-center text-gray-400 text-sm">
+              <div className="p-4 text-center text-pplx-muted text-sm">
                 No chats yet. Create one to get started!
               </div>
             )
@@ -215,8 +217,8 @@ export function ChatSidebar({
                     w-full flex items-center justify-between px-3 py-2.5 rounded-xl
                     transition-colors duration-200
                     ${selectedChatId === chat.id
-                      ? 'bg-gray-200 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-iitd-red-soft/55 text-iitd-red-dark'
+                      : 'text-pplx-ink/80 hover:bg-[#ebe4da] hover:text-pplx-ink'
                     }
                   `}
                 >
@@ -225,11 +227,11 @@ export function ChatSidebar({
                     className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer"
                     onClick={() => handleSelectChat(chat.id)}
                   >
-                    <MessageSquare className="w-4 h-4 flex-shrink-0 text-gray-400" />
+                    <MessageSquare className="w-4 h-4 flex-shrink-0 text-pplx-muted" />
                     {!isCollapsed && (
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium truncate">{chat.title || 'Untitled Chat'}</div>
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="text-xs text-pplx-muted mt-0.5">
                           {new Date(chat.created_at).toLocaleDateString()}
                         </div>
                       </div>
@@ -239,8 +241,8 @@ export function ChatSidebar({
                   {/* Right: ellipsis menu */}
                   {!isCollapsed && (
                     <Menu as="div" className="relative inline-block text-left">
-                      <Menu.Button className="p-1 hover:bg-gray-300 rounded-lg transition-colors duration-200">
-                        <MoreVertical className="w-4 h-4 text-gray-400" />
+                      <Menu.Button className="p-1 hover:bg-black/5 rounded-lg transition-colors duration-200">
+                        <MoreVertical className="w-4 h-4 text-pplx-muted" />
                       </Menu.Button>
                       <Transition
                         as={Fragment}
@@ -251,13 +253,13 @@ export function ChatSidebar({
                         leaveFrom="transform opacity-100 scale-100"
                         leaveTo="transform opacity-0 scale-95"
                       >
-                        <Menu.Items className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none z-10">
+                        <Menu.Items className="absolute right-0 mt-1 w-40 bg-pplx-surface border border-pplx-border rounded-xl shadow-sm focus:outline-none z-10">
                           <Menu.Item>
                             {({ active }) => (
                               <button
                                 onClick={() => handleDeleteChat(chat.id)}
                                 className={`${
-                                  active ? 'bg-red-50 text-red-600' : 'text-gray-600'
+                                  active ? 'bg-iitd-red-soft/50 text-iitd-red' : 'text-pplx-ink/80'
                                 } group flex w-full items-center px-4 py-2.5 text-sm transition-colors duration-150 rounded-xl`}
                               >
                                 Delete Chat

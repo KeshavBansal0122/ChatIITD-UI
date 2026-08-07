@@ -4,9 +4,18 @@
 
 @layer base {
   body {
-    @apply text-gray-900 bg-white;
-    font-family: 'Inter', system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    @apply bg-pplx-bg text-pplx-ink antialiased;
+    font-family: "Space Grotesk", system-ui, sans-serif;
   }
+}
+
+.aui-md table {
+  @apply mb-3 w-full border-collapse text-sm;
+}
+.aui-md th,
+.aui-md td {
+  @apply border border-pplx-border px-2 py-1;
+}
+.aui-md th {
+  @apply bg-[#ebe4da] text-left font-semibold;
 }
