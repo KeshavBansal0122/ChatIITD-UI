@@ -344,7 +344,8 @@ export function ProfilePage() {
               AI provider
             </h2>
             <p className="text-sm text-pplx-muted mt-0.5">
-              Shared pool has a rolling token limit. Use your own OpenAI / Claude / compatible key to bypass it.
+              Each signed-in account has its own rolling token budget on the shared model pool.
+              Use your own OpenAI / Claude / compatible key to bypass it.
               ChatIITD stays IIT Delhi academics only either way.
             </p>
           </div>
@@ -363,13 +364,13 @@ export function ProfilePage() {
               return (
                 <div className="space-y-2">
                   <div className="flex items-baseline justify-between gap-3 text-sm">
-                    <span className="font-medium text-pplx-ink">Shared usage</span>
+                    <span className="font-medium text-pplx-ink">Your usage</span>
                     {usage.byok ? (
                       <span className="text-pplx-muted">Bypassed (your API key)</span>
                     ) : (
                       <span className="text-pplx-muted tabular-nums">
                         {usage.used.toLocaleString()} / {usage.limit.toLocaleString()} tokens
-                        <span className="text-pplx-muted/80"> · last {usage.window_hours}h</span>
+                        <span className="text-pplx-muted/80"> · last {usage.window_hours}h · this account</span>
                       </span>
                     )}
                   </div>

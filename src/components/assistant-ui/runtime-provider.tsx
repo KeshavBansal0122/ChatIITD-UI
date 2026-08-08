@@ -33,12 +33,28 @@ function authHeaders(token: string | null): Record<string, string> {
 
 function useThreadChatRuntime() {
   const { accessToken, isGuest } = useAuth();
+  // Must read remoteId from the live store — the library's unstable_threadId
+  // comes from a React ref that often lags behind initialize(), so the backend
+  // was creating a new chat on every message.
+  const aui = useAui();
+
   return useDataStreamRuntime({
     api: `${API_BASE}/assistant/chat`,
     protocol: "data-stream",
     credentials: "include",
     headers: async () => authHeaders(accessToken),
-    body: async () => (isGuest ? { guest: true } : {}),
+    body: async () => {
+      const payload: Record<string, unknown> = isGuest ? { guest: true } : {};
+      try {
+        const remoteId = aui.threadListItem.getState().remoteId;
+        if (remoteId) {
+          payload.threadId = remoteId;
+        }
+      } catch {
+        // thread list item not ready yet
+      }
+      return payload;
+    },
     onError: (error) => {
       console.error("[assistant-ui]", error);
     },
