@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { LoginPage, CallbackPage, ChatPage, ProfilePage } from './pages';
+import { LoginPage, CallbackPage, ChatPage, ProfilePage, AdminPage } from './pages';
 import { LoadingScreen } from './components/ui/LoadingScreen';
 
 /** Allows authenticated users and guests (but not unauthenticated non-guests). */
@@ -40,6 +40,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/callback" element={<CallbackPage />} />
+          <Route path="/admin" element={<AdminPage />} />
           <Route
             path="/"
             element={
