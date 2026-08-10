@@ -1,6 +1,7 @@
 "use client";
 
 import { MarkdownText } from "@/components/assistant-ui/markdown-text";
+import { AssistantMessageError } from "@/components/assistant-ui/session-limit-alert";
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
 import { cn } from "@/lib/utils";
 import {
@@ -239,6 +240,7 @@ const AssistantMessage: FC = () => {
       >
         <ThinkingIndicator />
       </AuiIf>
+      <AssistantMessageError />
       <ActionBarPrimitive.Root className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover/message:opacity-100 group-focus-within/message:opacity-100">
         <ActionBarPrimitive.Reload className={messageActionClassName}>
           <RefreshCwIcon className="size-4" />

@@ -33,6 +33,9 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
   // Demo mode check
   const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
 
+  // Guest → signed-out: do not run OAuth bootstrap; stay on the login screen.
+  // Authenticated → signed-out: same. Only bootstrap when we have a token to
+  // restore or an OAuth code in the URL.
   useEffect(() => {
     // Demo mode: immediately set fake auth and skip all OAuth logic
     if (isDemoMode) {
@@ -48,14 +51,23 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
       return;
     }
 
-    if (lastBootstrappedBaseRef.current === apiBaseUrl) {
+    const params = new URLSearchParams(window.location.search);
+    const codeFromUrl = params.get('code');
+    const storedToken = localStorage.getItem('access_token');
+
+    // Logged out with nothing to restore — don't keep spinning bootstrap.
+    if (!codeFromUrl && !storedToken) {
+      setIsLoading(false);
+      lastBootstrappedBaseRef.current = null;
+      return;
+    }
+
+    if (lastBootstrappedBaseRef.current === apiBaseUrl && !codeFromUrl) {
       return;
     }
 
   let isActive = true;
   const rafId = requestAnimationFrame(async () => {
-      const params = new URLSearchParams(window.location.search);
-      const codeFromUrl = params.get('code');
       const stateFromUrl = params.get('state');
       let shouldReplaceUrl = false;
 
@@ -96,12 +108,9 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
           }
           localStorage.setItem('access_token', accessTokenFromServer);
           removeParams('code', 'state');
-        } else {
-          const storedToken = localStorage.getItem('access_token');
-          if (storedToken && isActive) {
-            setAccessToken(storedToken);
-            setError(null);
-          }
+        } else if (storedToken && isActive) {
+          setAccessToken(storedToken);
+          setError(null);
         }
 
       } catch (err) {
@@ -178,13 +187,16 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
     localStorage.removeItem('access_token');
   }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setAccessToken(null);
     setIsGuest(false);
     setError(null);
+    setIsLoading(false);
     localStorage.removeItem('access_token');
     localStorage.removeItem('guest_mode');
-  };
+    // Allow a fresh OAuth bootstrap after the next sign-in.
+    lastBootstrappedBaseRef.current = null;
+  }, []);
 
   const handleAuthError = useCallback(() => {
     // Called when API returns 401 - clear token and redirect to login

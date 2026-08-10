@@ -284,7 +284,10 @@ export function ProfilePage() {
           </div>
 
           <button
-            onClick={logout}
+            onClick={() => {
+              logout();
+              navigate('/login', { replace: true });
+            }}
             className="flex items-center gap-2 px-3 py-2 text-pplx-muted hover:text-iitd-red hover:bg-iitd-red-soft/50 rounded-lg transition-colors duration-200 text-sm"
           >
             <LogOut className="w-4 h-4" />

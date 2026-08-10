@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu, PanelLeftClose, PanelLeft, UserRound, LogOut } from "lucide-react";
 import { Thread } from "@/components/assistant-ui/thread";
 import { ThreadList } from "@/components/assistant-ui/thread-list";
@@ -11,7 +11,13 @@ import { cn } from "@/lib/utils";
 export function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
   const { logout, isGuest, isAuthenticated } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <ChatErrorBoundary>
@@ -40,7 +46,7 @@ export function ChatPage() {
           <div className="min-h-0 flex-1">
             <ThreadList />
           </div>
-          <SidebarFooter isGuest={isGuest} isAuthenticated={isAuthenticated} onLogout={logout} />
+          <SidebarFooter isGuest={isGuest} isAuthenticated={isAuthenticated} onLogout={handleLogout} />
         </aside>
 
         {/* Mobile drawer */}
@@ -68,7 +74,7 @@ export function ChatPage() {
               <div className="min-h-0 flex-1" onClick={() => setMobileOpen(false)}>
                 <ThreadList />
               </div>
-              <SidebarFooter isGuest={isGuest} isAuthenticated={isAuthenticated} onLogout={logout} />
+              <SidebarFooter isGuest={isGuest} isAuthenticated={isAuthenticated} onLogout={handleLogout} />
             </aside>
           </div>
         )}
