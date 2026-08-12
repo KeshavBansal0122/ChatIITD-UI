@@ -41,8 +41,9 @@ function formatToolStatus(toolRaw: string): string {
       return 'Checking the programme structure...';
     }
 
-    case 'get_rules_section':
-    case 'search_rules':
+    case 'search_cos':
+    case 'list_cos_sections':
+    case 'get_cos_section':
       return 'Checking the institute rules...';
 
     case 'search_courses':

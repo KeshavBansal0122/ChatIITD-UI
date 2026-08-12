@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService, Chat, AuthError } from '../services/api';
-import { Plus, MessageSquare, User, Loader2, ChevronLeft, ChevronRight, Menu as MenuIcon, LogIn } from 'lucide-react';
+import { Plus, MessageSquare, User, Loader2, ChevronLeft, ChevronRight, LogIn } from 'lucide-react';
 
 import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';

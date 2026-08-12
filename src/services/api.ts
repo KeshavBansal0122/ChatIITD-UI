@@ -92,6 +92,8 @@ export interface LlmCredentialsPublic {
   base_url: string;
   model: string | null;
   key_fingerprint: string;
+  auth_method: string;
+  enabled: boolean;
   created_at?: string | null;
   updated_at?: string | null;
 }
@@ -426,6 +428,40 @@ class ApiService {
     return response.json();
   }
 
+  async patchLlmCredentialsModel(
+    accessToken: string,
+    model: string
+  ): Promise<LlmCredentialsResponse> {
+    const response = await fetch(`${API_BASE_URL}/user/llm-credentials/model`, {
+      method: 'PATCH',
+      headers: this.getHeaders(accessToken),
+      body: JSON.stringify({ model }),
+    });
+    if (response.status === 401) throw new AuthError();
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { detail?: string }).detail || 'Failed to update model');
+    }
+    return response.json();
+  }
+
+  async patchLlmCredentialsEnabled(
+    accessToken: string,
+    enabled: boolean
+  ): Promise<LlmCredentialsResponse> {
+    const response = await fetch(`${API_BASE_URL}/user/llm-credentials/enabled`, {
+      method: 'PATCH',
+      headers: this.getHeaders(accessToken),
+      body: JSON.stringify({ enabled }),
+    });
+    if (response.status === 401) throw new AuthError();
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { detail?: string }).detail || 'Failed to update provider status');
+    }
+    return response.json();
+  }
+
   async deleteLlmCredentials(accessToken: string): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/user/llm-credentials`, {
       method: 'DELETE',
@@ -433,6 +469,29 @@ class ApiService {
     });
     if (response.status === 401) throw new AuthError();
     if (!response.ok) throw new Error('Failed to delete LLM credentials');
+  }
+
+  async startOpenRouterOAuth(accessToken: string): Promise<{ auth_url: string }> {
+    const response = await fetch(`${API_BASE_URL}/user/llm-credentials/openrouter/start`, {
+      headers: this.getHeaders(accessToken),
+    });
+    if (response.status === 401) throw new AuthError();
+    if (!response.ok) throw new Error('Failed to start OpenRouter connection');
+    return response.json();
+  }
+
+  async finishOpenRouterOAuth(accessToken: string, code: string): Promise<LlmCredentialsResponse> {
+    const response = await fetch(`${API_BASE_URL}/user/llm-credentials/openrouter/callback`, {
+      method: 'POST',
+      headers: this.getHeaders(accessToken),
+      body: JSON.stringify({ code }),
+    });
+    if (response.status === 401) throw new AuthError();
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as { detail?: string }).detail || 'Failed to finish OpenRouter connection');
+    }
+    return response.json();
   }
 }
 

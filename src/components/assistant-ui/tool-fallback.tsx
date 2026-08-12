@@ -20,8 +20,9 @@ const FRIENDLY: Record<string, (args: Record<string, unknown>) => string> = {
       ? `Checking the programme structure for ${String(code)}…`
       : "Checking the programme structure…";
   },
-  get_rules_section: () => "Checking the institute rules…",
-  search_rules: () => "Checking the institute rules…",
+  search_cos: () => "Searching in Courses of Study…",
+  list_cos_sections: () => "Reading Courses of Study headers…",
+  get_cos_section: () => "Reading a Courses of Study section…",
   search_courses: () => "Searching in Courses of Study…",
   get_wiki_page: (args) =>
     args.page_title ? `Reading wiki: ${String(args.page_title)}…` : "Reading the campus wiki…",

@@ -46,12 +46,19 @@ function useThreadChatRuntime() {
     body: async () => {
       const payload: Record<string, unknown> = isGuest ? { guest: true } : {};
       try {
-        const remoteId = aui.threadListItem.getState().remoteId;
-        if (remoteId) {
-          payload.threadId = remoteId;
-        }
+        // Await initialize() — idempotent if the thread already has a remoteId.
+        // This guarantees threadId is set before the HTTP request fires, preventing
+        // the backend from creating a duplicate chat row for missing-threadId requests.
+        const { remoteId } = await aui.threadListItem.initialize();
+        if (remoteId) payload.threadId = remoteId;
       } catch {
-        // thread list item not ready yet
+        // Fall back to reading the cached state (guest / not-yet-mounted edge cases)
+        try {
+          const remoteId = aui.threadListItem.getState().remoteId;
+          if (remoteId) payload.threadId = remoteId;
+        } catch {
+          // thread list item not ready — backend will reject with 400
+        }
       }
       return payload;
     },

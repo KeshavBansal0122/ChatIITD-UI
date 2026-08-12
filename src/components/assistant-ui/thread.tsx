@@ -232,28 +232,42 @@ const AssistantMessage: FC = () => {
           );
           if (hasText) return false;
           const hasTool = parts.some((p) => p.type === "tool-call");
-          const toolRunning = parts.some(
-            (p) => p.type === "tool-call" && p.status?.type === "running",
-          );
+          const toolRunning = parts.some((p) => {
+            if (p.type !== "tool-call") return false;
+            const status = (p as { status?: { type?: string } }).status;
+            return status?.type === "running";
+          });
           return hasTool && !toolRunning;
         }}
       >
         <ThinkingIndicator />
       </AuiIf>
       <AssistantMessageError />
-      <ActionBarPrimitive.Root className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover/message:opacity-100 group-focus-within/message:opacity-100">
-        <ActionBarPrimitive.Reload className={messageActionClassName}>
-          <RefreshCwIcon className="size-4" />
-        </ActionBarPrimitive.Reload>
-        <ActionBarPrimitive.Copy className={messageActionClassName}>
-          <AuiIf condition={(s) => s.message.isCopied}>
-            <CheckIcon className="size-4" />
-          </AuiIf>
-          <AuiIf condition={(s) => !s.message.isCopied}>
-            <CopyIcon className="size-4" />
-          </AuiIf>
-        </ActionBarPrimitive.Copy>
-      </ActionBarPrimitive.Root>
+      <AuiIf
+        condition={(s) => {
+          const st = s.message.status;
+          // Hide reload/copy under quota / error-only turns
+          return !(
+            st?.type === "incomplete" &&
+            "reason" in st &&
+            st.reason === "error"
+          );
+        }}
+      >
+        <ActionBarPrimitive.Root className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover/message:opacity-100 group-focus-within/message:opacity-100">
+          <ActionBarPrimitive.Reload className={messageActionClassName}>
+            <RefreshCwIcon className="size-4" />
+          </ActionBarPrimitive.Reload>
+          <ActionBarPrimitive.Copy className={messageActionClassName}>
+            <AuiIf condition={(s) => s.message.isCopied}>
+              <CheckIcon className="size-4" />
+            </AuiIf>
+            <AuiIf condition={(s) => !s.message.isCopied}>
+              <CopyIcon className="size-4" />
+            </AuiIf>
+          </ActionBarPrimitive.Copy>
+        </ActionBarPrimitive.Root>
+      </AuiIf>
     </MessagePrimitive.Root>
   );
 };

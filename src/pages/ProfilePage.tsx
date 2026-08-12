@@ -28,6 +28,15 @@ const LLM_PROVIDERS = [
   { id: 'custom', label: 'Custom (OpenAI-compatible)' },
 ] as const;
 
+const OPENROUTER_MODEL_OPTIONS = [
+  { id: 'openai/gpt-5.6-luna', label: 'GPT-5.6 Luna' },
+  { id: 'anthropic/claude-haiku-4.5', label: 'Claude Haiku 4.5' },
+  { id: 'anthropic/claude-sonnet-4.5', label: 'Claude Sonnet 4.5' },
+  { id: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+  { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+  { id: 'meta-llama/llama-3.3-70b-instruct', label: 'Llama 3.3 70B Instruct' },
+] as const;
+
 export function ProfilePage() {
   const navigate = useNavigate();
   const { accessToken, logout, handleAuthError } = useAuth();
@@ -49,6 +58,9 @@ export function ProfilePage() {
   const [llmBaseUrl, setLlmBaseUrl] = useState('');
   const [llmModel, setLlmModel] = useState('');
   const [isSavingLlm, setIsSavingLlm] = useState(false);
+  const [isSavingLlmModel, setIsSavingLlmModel] = useState(false);
+  const [isSavingLlmEnabled, setIsSavingLlmEnabled] = useState(false);
+  const [isConnectingOpenRouter, setIsConnectingOpenRouter] = useState(false);
   const [llmMessage, setLlmMessage] = useState<string | null>(null);
   const [customProviderOpen, setCustomProviderOpen] = useState(false);
 
@@ -60,6 +72,12 @@ export function ProfilePage() {
   const [addingSemester, setAddingSemester] = useState<number | null>(null);
 
   const hasChanges = JSON.stringify(courses) !== JSON.stringify(originalCourses);
+  const isOpenRouterOAuthConnected =
+    llmCreds?.provider === 'openrouter' && llmCreds.auth_method === 'oauth';
+  const llmCredentialsEnabled = llmCreds?.enabled ?? true;
+  const selectedOpenRouterPreset = OPENROUTER_MODEL_OPTIONS.some((option) => option.id === llmModel)
+    ? llmModel
+    : 'custom';
 
   const loadProfile = useCallback(async () => {
     if (!accessToken) return;
@@ -102,6 +120,20 @@ export function ProfilePage() {
     loadProfile();
   }, [loadProfile]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('openrouter_connected') === '1') {
+      setLlmMessage('OpenRouter connected. Shared token limits are bypassed.');
+      navigate('/profile', { replace: true });
+      return;
+    }
+    const openRouterError = params.get('openrouter_error');
+    if (openRouterError) {
+      setLlmMessage(openRouterError);
+      navigate('/profile', { replace: true });
+    }
+  }, [navigate]);
+
   const handleSaveLlm = async () => {
     if (!accessToken || !llmApiKey.trim()) return;
     try {
@@ -126,6 +158,67 @@ export function ProfilePage() {
       setLlmMessage(err instanceof Error ? err.message : 'Failed to save API key');
     } finally {
       setIsSavingLlm(false);
+    }
+  };
+
+  const handleConnectOpenRouter = async () => {
+    if (!accessToken) return;
+    try {
+      setIsConnectingOpenRouter(true);
+      setLlmMessage(null);
+      const { auth_url } = await apiService.startOpenRouterOAuth(accessToken);
+      window.location.href = auth_url;
+    } catch (err) {
+      if (err instanceof AuthError) {
+        handleAuthError();
+        return;
+      }
+      setLlmMessage(err instanceof Error ? err.message : 'Failed to start OpenRouter connection');
+      setIsConnectingOpenRouter(false);
+    }
+  };
+
+  const handleSaveLlmModel = async () => {
+    if (!accessToken || !llmModel.trim()) return;
+    try {
+      setIsSavingLlmModel(true);
+      setLlmMessage(null);
+      const res = await apiService.patchLlmCredentialsModel(accessToken, llmModel.trim());
+      setLlmCreds(res.credentials || null);
+      setLlmMessage(`Model updated to ${res.credentials?.model || llmModel.trim()}.`);
+    } catch (err) {
+      if (err instanceof AuthError) {
+        handleAuthError();
+        return;
+      }
+      setLlmMessage(err instanceof Error ? err.message : 'Failed to update model');
+    } finally {
+      setIsSavingLlmModel(false);
+    }
+  };
+
+  const handleToggleLlmEnabled = async (enabled: boolean) => {
+    if (!accessToken || !llmCreds) return;
+    try {
+      setIsSavingLlmEnabled(true);
+      setLlmMessage(null);
+      const res = await apiService.patchLlmCredentialsEnabled(accessToken, enabled);
+      setLlmCreds(res.credentials || null);
+      const usageData = await apiService.getUsage(accessToken);
+      setUsage(usageData);
+      setLlmMessage(
+        enabled
+          ? 'Provider enabled. New chats will use your saved credentials.'
+          : 'Provider disabled. New chats will use the shared provider if available.'
+      );
+    } catch (err) {
+      if (err instanceof AuthError) {
+        handleAuthError();
+        return;
+      }
+      setLlmMessage(err instanceof Error ? err.message : 'Failed to update provider status');
+    } finally {
+      setIsSavingLlmEnabled(false);
     }
   };
 
@@ -348,7 +441,7 @@ export function ProfilePage() {
             </h2>
             <p className="text-sm text-pplx-muted mt-0.5">
               Each signed-in account has its own rolling token budget on the shared model pool.
-              Use your own OpenAI / Claude / compatible key to bypass it.
+              Connect OpenRouter or use your own OpenAI / Claude / compatible key to bypass it.
               ChatIITD stays IIT Delhi academics only either way.
             </p>
           </div>
@@ -401,6 +494,100 @@ export function ProfilePage() {
               );
             })()}
 
+            <div className="rounded-xl border border-pplx-border bg-[#fcfaf7] px-4 py-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="text-sm font-medium text-pplx-ink flex items-center gap-2">
+                    OpenRouter OAuth
+                    {isOpenRouterOAuthConnected && (
+                      <span
+                        className={`text-xs font-normal rounded-md px-1.5 py-0.5 border ${
+                          llmCredentialsEnabled
+                            ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                            : 'text-pplx-muted bg-white border-pplx-border'
+                        }`}
+                      >
+                        {llmCredentialsEnabled ? 'Enabled' : 'Disabled'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-pplx-muted mt-0.5">
+                    One-click connection. Uses credits from your OpenRouter account; no API key is shown in the browser.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  {isOpenRouterOAuthConnected && (
+                    <label className="inline-flex items-center gap-2 text-sm text-pplx-ink">
+                      <input
+                        type="checkbox"
+                        role="switch"
+                        checked={llmCredentialsEnabled}
+                        onChange={(e) => handleToggleLlmEnabled(e.target.checked)}
+                        disabled={isSavingLlmEnabled}
+                        className="h-4 w-8 rounded-full accent-iitd-red disabled:opacity-40"
+                      />
+                      {isSavingLlmEnabled ? 'Saving...' : llmCredentialsEnabled ? 'Use account' : 'Use shared'}
+                    </label>
+                  )}
+                  <button
+                    onClick={handleConnectOpenRouter}
+                    disabled={isConnectingOpenRouter || isSavingLlm}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-pplx-ink px-3 py-2 text-sm font-medium text-white transition hover:bg-pplx-accent disabled:opacity-40"
+                  >
+                    {isConnectingOpenRouter ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ExternalLink className="w-4 h-4" />
+                    )}
+                    {isOpenRouterOAuthConnected ? 'Reconnect' : 'Connect OpenRouter'}
+                  </button>
+                </div>
+              </div>
+              {isOpenRouterOAuthConnected && (
+                <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="text-sm space-y-1">
+                      <span className="text-pplx-muted">OpenRouter model</span>
+                      <select
+                        value={selectedOpenRouterPreset}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setLlmModel(value === 'custom' ? '' : value);
+                        }}
+                        className="w-full rounded-lg border border-pplx-border bg-white px-3 py-2 text-pplx-ink"
+                      >
+                        {OPENROUTER_MODEL_OPTIONS.map((option) => (
+                          <option key={option.id} value={option.id}>{option.label}</option>
+                        ))}
+                        <option value="custom">Custom model ID</option>
+                      </select>
+                    </label>
+                    <label className="text-sm space-y-1">
+                      <span className="text-pplx-muted">Model ID</span>
+                      <input
+                        value={llmModel}
+                        onChange={(e) => setLlmModel(e.target.value)}
+                        placeholder="provider/model-id"
+                        className="w-full rounded-lg border border-pplx-border bg-white px-3 py-2 text-pplx-ink"
+                      />
+                    </label>
+                  </div>
+                  <button
+                    onClick={handleSaveLlmModel}
+                    disabled={
+                      isSavingLlmModel ||
+                      !llmModel.trim() ||
+                      llmModel.trim() === (llmCreds.model || '').trim()
+                    }
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-pplx-border bg-white px-3 py-2 text-sm font-medium text-pplx-ink transition hover:bg-[#f1ece5] disabled:opacity-40"
+                  >
+                    {isSavingLlmModel ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    Save model
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="rounded-xl border border-pplx-border overflow-hidden">
               <button
                 type="button"
@@ -412,14 +599,20 @@ export function ProfilePage() {
                   <div className="text-sm font-medium text-pplx-ink flex items-center gap-2">
                     Custom provider
                     {llmCreds && (
-                      <span className="text-xs font-normal text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-1.5 py-0.5">
-                        Connected
+                      <span
+                        className={`text-xs font-normal rounded-md px-1.5 py-0.5 border ${
+                          llmCredentialsEnabled
+                            ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                            : 'text-pplx-muted bg-white border-pplx-border'
+                        }`}
+                      >
+                        {llmCredentialsEnabled ? 'Enabled' : 'Disabled'}
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-pplx-muted mt-0.5 truncate">
                     {llmCreds
-                      ? `${llmCreds.provider}${llmCreds.model ? ` · ${llmCreds.model}` : ''} · ${llmCreds.key_fingerprint}`
+                      ? `${llmCreds.provider}${llmCreds.auth_method === 'oauth' ? ' OAuth' : ''}${llmCreds.model ? ` · ${llmCreds.model}` : ''} · ${llmCreds.key_fingerprint}`
                       : 'Optional — use your own OpenAI / Claude / compatible key'}
                   </p>
                 </div>
@@ -477,6 +670,28 @@ export function ProfilePage() {
                       />
                     </label>
                   </div>
+
+                  {llmCreds && !isOpenRouterOAuthConnected && (
+                    <div className="flex flex-col gap-2 rounded-lg border border-pplx-border bg-white px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <div className="text-sm font-medium text-pplx-ink">Use this provider</div>
+                        <p className="text-xs text-pplx-muted">
+                          Turn this off to keep the key saved but use the shared provider.
+                        </p>
+                      </div>
+                      <label className="inline-flex items-center gap-2 text-sm text-pplx-ink">
+                        <input
+                          type="checkbox"
+                          role="switch"
+                          checked={llmCredentialsEnabled}
+                          onChange={(e) => handleToggleLlmEnabled(e.target.checked)}
+                          disabled={isSavingLlmEnabled}
+                          className="h-4 w-8 rounded-full accent-iitd-red disabled:opacity-40"
+                        />
+                        {isSavingLlmEnabled ? 'Saving...' : llmCredentialsEnabled ? 'Enabled' : 'Disabled'}
+                      </label>
+                    </div>
+                  )}
 
                   <div className="flex flex-wrap gap-2">
                     <button

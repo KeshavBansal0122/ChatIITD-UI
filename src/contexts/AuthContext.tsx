@@ -23,7 +23,7 @@ interface AuthProviderInnerProps {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiBaseUrl }: AuthProviderInnerProps) {
+function AuthProviderInner({ children, clientId, oauthBaseUrl: _oauthBaseUrl, redirectUri, apiBaseUrl }: AuthProviderInnerProps) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(() => localStorage.getItem('guest_mode') === 'true');
   const [isLoading, setIsLoading] = useState(true);
@@ -52,7 +52,8 @@ function AuthProviderInner({ children, clientId, oauthBaseUrl, redirectUri, apiB
     }
 
     const params = new URLSearchParams(window.location.search);
-    const codeFromUrl = params.get('code');
+    const isOpenRouterCallback = window.location.pathname === '/openrouter/callback';
+    const codeFromUrl = isOpenRouterCallback ? null : params.get('code');
     const storedToken = localStorage.getItem('access_token');
 
     // Logged out with nothing to restore — don't keep spinning bootstrap.
